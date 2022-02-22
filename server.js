@@ -2,7 +2,8 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import restaurant from "./routes/restaurant.js";
+import admin from "./routes/admin.js";
+import tenant from "./routes/tenant.js";
 import user from "./routes/user.js";
 
 dotenv.config();
@@ -21,7 +22,8 @@ connection.once("open", () => {
   console.log("Connected successfully");
 });
 
-app.use('/admin', restaurant);
+app.use('/admin', admin);
+app.use('/tenant', tenant);
 app.use('/user', user);
 
 app.listen(port, () => {
