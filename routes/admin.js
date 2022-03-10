@@ -174,7 +174,7 @@ router.post("/signup", (req, res) => {
 // send verification email
 const sendVerificationEmail = ({ AdminID, email }, res) => {
   // url to be used in the email
-  const currentUrl = "https://oasisone.herokuapp.com/";
+  const currentUrl = "http://localhost:5000/";
 
   const uniqueString = uuid() + AdminID;
 
