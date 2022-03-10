@@ -2,7 +2,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import admin from "./routes/admin.js";
+import management from "./routes/management.js";
 import tenant from "./routes/tenant.js";
 import user from "./routes/user.js";
 
@@ -22,7 +22,7 @@ connection.once("open", () => {
   console.log("Connected successfully");
 });
 
-app.use('/admin', admin);
+app.use('/management', management);
 app.use('/tenant', tenant);
 app.use('/user', user);
 

@@ -6,6 +6,11 @@ const tenantSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    profileimage: {
+      type: String,
+      default:
+        "https://icon-library.com/images/anonymous-avatar-icon/anonymous-avatar-icon-25.jpg",
+    },
     name: {
       type: String,
       required: true,
@@ -17,19 +22,22 @@ const tenantSchema = mongoose.Schema(
     },
     address: {
       type: String,
-      required: true,
+      default: "please input address"
     },
     phonenumber: {
       type: String,
-      required: true,
+      default: "please input phone number"
     },
     password: {
-        type: String,
-        required: true,
-      },
-      verified: {
-        type: Boolean
-      }
+      type: String,
+      required: true,
+    },
+    confirmPassword: {
+      type: String,
+    },
+    verified: {
+      type: Boolean,
+    },
   },
   {
     timestamps: true,
@@ -39,3 +47,5 @@ const tenantSchema = mongoose.Schema(
 const Tenant = mongoose.model("Tenant", tenantSchema);
 
 export default Tenant;
+
+

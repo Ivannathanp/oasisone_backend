@@ -52,7 +52,7 @@ transporter.verify((error, success) => {
 
 //Signup
 router.post("/signup", (req, res) => {
-  let { name, email, address, phonenumber, password } = req.body;
+  let { name, email, password, confirmPassword } = req.body;
   let TenantID;
   let tempId = getRandomString.generate(8);
 
@@ -67,9 +67,8 @@ router.post("/signup", (req, res) => {
   if (
     name == "" ||
     email == "" ||
-    address == "" ||
-    phonenumber == "" ||
-    password == ""
+    password == "" ||
+    confirmPassword == ""
   ) {
     res.json({
       status: "FAILED",
@@ -85,24 +84,16 @@ router.post("/signup", (req, res) => {
       status: "FAILED",
       message: " Invalid email entered",
     });
-  } else if (
-    !/^[\+]?[(]?[0-9]{3}[)]?[-\s\.]?[0-9]{3}[-\s\.]?[0-9]{4,6}$/.test(
-      phonenumber
-    )
-  ) {
-    res.json({
-      status: "FAILED",
-      message: " Invalid phone number entered",
-    });
-  } else if (!/^[a-zA-Z]*$/.test(address)) {
-    res.json({
-      status: "FAILED",
-      message: " Invalid address entered",
-    });
+
   } else if (password.length < 8) {
     res.json({
       status: "FAILED",
       message: " Password is too short",
+    });
+  } else if (confirmPassword != password) {
+    res.json({
+      status: "FAILED",
+      message: "Confirm Password is not the same as password",
     });
   } else {
     //checking if user already exists
@@ -126,8 +117,6 @@ router.post("/signup", (req, res) => {
                 tenant_id: TenantID,
                 name,
                 email,
-                address,
-                phonenumber,
                 password: hashedPassword,
                 verified: false,
               });
@@ -168,7 +157,7 @@ router.post("/signup", (req, res) => {
 // send verification email
 const sendVerificationEmail = ({ _id, email }, res) => {
   // url to be used in the email
-  const currentUrl = "http://localhost:5000/";
+  const currentUrl = "https://oasisone.herokuapp.com/";
 
   const uniqueString = uuidv4() + _id;
 
@@ -576,4 +565,14 @@ router.post("/passwordreset", (req, res) => {
       });
     });
 });
+
+router.get("/user", (req, res) => {
+
+  Tenant.find()
+    .then((result) => {
+      res.json(result)
+    })
+  });
+
+
 export default router;
