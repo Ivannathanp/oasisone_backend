@@ -178,6 +178,16 @@ router.post("/signup", (req, res) => {
           });
         });
     }
+
+
   });
+
+  router.get("/user", (req, res) => {
+
+    Tenant.find()
+      .then((result) => {
+        res.json(result)
+      })
+    });
 
 export default router;

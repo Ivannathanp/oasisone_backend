@@ -3,54 +3,43 @@ import mongoose from "mongoose";
 const orderSchema = mongoose.Schema(
   {
     user_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "Cart"
-    },
-    menu: [
-      {
-        type: mongoose.Schema.Types.ObjectId,
-        required: true,
-        ref: "Cart"
-      }
-    ],
-    name: {
       type: String,
-      required: true,
-    },
-    phone: {
-      type: Number,
-      required: true,
-    },
-    request: {
-      type: String,
-      required: true,
-    },
-    table: {
-      type: String,
-      required: true,
-    },
-    guess: {
-      type: Number,
       required: true,
     },
     order_id: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-    },
-    time: {
-      type: Date,
-      default: Date.now,
-      required: true,
-    },
-    total: {
-      type: Number,
-      required: true,
-    },
-    status: {
       type: String,
       required: true,
-    }
+    },
+    order_status: {
+      type: String,
+      required: true,
+    },
+    order_table: {
+      type: String,
+      required: true,
+    },
+    order_time:{
+      type: String,
+      required: true,
+    },
+    tenant_id:{
+      type: String,
+      required: true,
+    },
+    order_menu:[{
+      menu_id: {
+        type: String,
+        required: true,
+      },
+      quantity:{
+        type: String,
+        required: true,
+      },
+    }],
+    order_total:{
+      type: String,
+      required: true,
+    },
   },
   {
     timestamps: true,

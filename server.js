@@ -2,6 +2,7 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import dotenv from "dotenv";
+
 import management from "./routes/management.js";
 import tenant from "./routes/tenant.js";
 import user from "./routes/user.js";
@@ -22,9 +23,9 @@ connection.once("open", () => {
   console.log("Connected successfully");
 });
 
-app.use('/management', management);
-app.use('/tenant', tenant);
-app.use('/user', user);
+app.use('/api/management', management);
+app.use('/api/tenant', tenant);
+app.use('/api/user', user);
 
 app.listen(port, () => {
     console.log('Server is running on port:' , port );

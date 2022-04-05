@@ -2,23 +2,32 @@ import mongoose from "mongoose";
 
 const promobannerSchema = mongoose.Schema(
   {
-    title: {
+    tenant_id: {
       type: String,
       required: true,
     },
-    content: {
-      type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      required: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
+    promotion: [{
+      id: {
+        type: String,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      startingPeriod : {
+        type: Date,
+        required: true,
+      },
+      endingPeriod:{
+        type: Date,
+        required: true,
+      },
+      details:{
+        type: String,
+        required: true,
+      }
+    }],
   },
   {
     timestamps: true,

@@ -2,23 +2,56 @@ import mongoose from "mongoose";
 
 const menuSchema = mongoose.Schema(
   {
-    title: {
+    tenant_id: {
       type: String,
       required: true,
     },
-    content: {
-      type: String,
-      required: true,
-    },
-    category: {
-      type: String,
-      required: true,
-    },
-    user: {
-      type: mongoose.Schema.Types.ObjectId,
-      required: true,
-      ref: "User",
-    },
+    category: [{
+      id: {
+        type: String,
+        required: true,
+      },
+      name: {
+        type: String,
+        required: true,
+      },
+      menu: [{
+        id: {
+          type: String,
+          required: true,
+        },
+        name: {
+          type: String,
+          required: true,
+        },
+        duration: {
+          type: String,
+          required: true,
+        },
+        description: {
+          type: String,
+          required: true,
+        },
+        isRecommended: {
+          type: Boolean,
+          required: true,
+          default: false
+        },
+        price: {
+          type: String,
+          required: true,
+        },
+        quantity: {
+          type: String,
+          required: true,
+        },
+        isAvailable: {
+          type: Boolean,
+          required: true,
+          default: true,
+        },
+      }]
+    }],
   },
   {
     timestamps: true,
