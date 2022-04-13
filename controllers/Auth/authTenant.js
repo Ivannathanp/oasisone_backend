@@ -47,7 +47,7 @@ transporter.verify((error, success) => {
 });
 
 // Component
-const sendVerificationEmail = ({ _id, email }, res) => {
+function sendVerificationEmail({ _id, email }, res) {
   // url to be used in the email
   const currentUrl = "http://localhost:5000/";
 
@@ -190,7 +190,6 @@ function sendResetEmail({ _id, email }, redirectUrl, res) {
 
 
 // Functions
-
 async function Register(req, res) {
 	try {
 		const { name, email, password, confirmPassword } = req.body;
@@ -204,7 +203,6 @@ async function Register(req, res) {
 		}
 
   TenantID = "T-" + tempId;
-
   if (
     name == "" ||
     email == "" ||
@@ -244,6 +242,8 @@ async function Register(req, res) {
         } else {
           //Try to create a new user
 
+          
+
           //Password handler
           const saltRounds = 10;
           bcrypt
@@ -255,6 +255,77 @@ async function Register(req, res) {
                 email,
                 password: hashedPassword,
                 verified: false,
+                openingDays: [{
+                  day       : "Monday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Tuesday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Wednesday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Thursday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Friday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Saturday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                }, {
+                  day       : "Sunday",
+                  is24Hours : false,
+                  isClosed  : false,
+                  OpenHour  : "00",
+                  OpenMins  : "00",
+                  OpenTF    : "AM",
+                  CloseHour : "00",
+                  CloseMins : "00",
+                  CloseTF   : "PM",
+                } ] 
               });
 
               newTenant
@@ -270,6 +341,7 @@ async function Register(req, res) {
                     message: "An error occured while saving password!",
                   });
                 });
+
             })
             .catch((err) => {
               console.log(err);

@@ -1,0 +1,217 @@
+import Tenant from "../../models/tenantModel.js";
+import Promo from "../../models/promobannerModel.js";
+
+// Create Promotions
+async function CreatePromotions(req, res) {
+    try {
+        const { tenant_id, promo_name, promo_start, promo_end, promo_details } = req.body;
+
+        let promo_id;
+        let tempId = Math.floor( Math.random() * 9999999999 );
+        
+        const existingId = await Promo.findOne({ promo_id: "P-" + tempId });
+		if ( existingId ) {
+			tempId = new Math.floor( Math.random() * 9999999999 );
+			return tempId;
+		}
+
+        promo_id = "P-" + tempId;
+
+        const existingPromo = await Promo.findOne({
+            tenant_id: tenant_id
+        })
+
+        if ( existingPromo ) {
+            const UpdatePromo = await Promo.updateOne({
+                tenant_id: tenant_id
+            }, {
+                $push: {
+                    "promotions": {
+                        id              : promo_id,
+                        name            : promo_name,
+                        startingPeriod  : promo_start,
+                        endingPeriod    : promo_end,
+                        details         : promo_details,
+                    }
+                }
+            })
+
+            const RetrieveLatestPromo = await Promo.findOne({
+                tenant_id: tenant_id
+            })
+
+            if ( RetrieveLatestPromo ) {
+                return res.status(200).json({
+                    status  : "SUCCESS",
+                    message : "Order has been placed",
+                    data    : RetrieveLatestPromo,
+                })
+            } else {
+                return res.status(404).json({
+                    status  : "FAILED",
+                    message : "Order has not been placed"
+                })
+            }
+
+        } else {
+            const newPromo = new Promo({
+                tenant_id   : tenant_id,
+                promotions  : [{
+                    id              : promo_id,
+                    name            : promo_name,
+                    startingPeriod  : promo_start,
+                    endingPeriod    : promo_end,
+                    details         : promo_details,
+                }]
+            })
+            await newPromo.save();
+
+            if ( newPromo ) {
+                return res.status(200).json({
+                    status  : "SUCCESS",
+                    message : "Order has been placed",
+                    data    : newPromo,
+                })
+            } else {
+                return res.status(404).json({
+                    status  : "FAILED",
+                    message : "Order has not been placed"
+                })
+            }
+        }
+        
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ 
+          status  : "FAILED",
+          message : error.message 
+        });
+    }
+}
+
+
+// Retrieve Promotions
+async function RetrievePromotions(req, res) {
+    try {
+        const { tenant_id } = req.params;
+
+        const checkPromo = await Promo.findOne({
+            tenant_id: tenant_id
+        })
+
+        if ( checkPromo ) {
+            return res.status(200).json({
+                status  : "SUCCESS",
+                message : "Promo has been retrieved",
+                data    : checkPromo
+            })
+        } else {
+            return res.status(404).json({
+                status  : "FAILED",
+                message : "Promo has not been retrieved",  
+            })
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ 
+          status  : "FAILED",
+          message : error.message 
+        });
+    }
+}
+
+// Edit Promotions
+async function EditPromotions(req, res) {
+    try {
+        const { promo_id } = req.params;
+        const { promo_name, promo_start, promo_end, promo_details } = req.body;
+
+        const checkPromo = await Promo.findOne({
+            "promotions.id" : promo_id
+        }, { promotions: { $elemMatch: { id: promo_id } }} )
+
+        if ( checkPromo ) {
+            const updatePromo = await Promo.updateOne({
+                "promotions.id" : promo_id
+            }, {
+                $set: 
+                    {
+                        "promotions.$.name" : promo_name,
+                        "promotions.$.startingPeriod" : promo_start,
+                        "promotions.$.endingPeriod" : promo_end,
+                        "promotions.$.details" : promo_details,
+                    }
+            })
+
+            if ( updatePromo ) {
+                const checkAfterUpdate = await Promo.findOne({
+                    "promotions.id" : promo_id
+                })
+
+                return res.status(200).json({
+                    status  : "SUCCESS",
+                    message : "Promo has been updated",
+                    data    : checkAfterUpdate
+                })
+            }
+ 
+        } else {
+            return res.status(404).json({
+                status  : "FAILED",
+                message : "Promo has not been updated"
+            })
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ 
+          status  : "FAILED",
+          message : error.message 
+        });
+    }
+}
+
+// Delete Promotions
+async function DeletePromotions(req, res) {
+    try {
+        const { promo_id } = req.params;
+
+        const checkPromo = await Promo.findOne({
+            "promotions.id" : promo_id
+        }, { promotions: { $elemMatch: { id: promo_id } }} )
+
+        if ( checkPromo ) {
+            const deletePromo = await Promo.updateOne({
+                "promotions.id" : promo_id
+            }, {
+                $pull: 
+                    {
+                        "promotions" : { id: promo_id },
+                    }
+            })
+
+            if ( deletePromo ) {
+                return res.status(200).json({
+                    status  : "SUCCESS",
+                    message : "Promo has been deleted",
+                })
+            }
+ 
+        } else {
+            return res.status(404).json({
+                status  : "FAILED",
+                message : "Promo has not been deleted"
+            })
+        }
+
+    } catch (error) {
+        console.log(error);
+        res.status(500).json({ 
+          status  : "FAILED",
+          message : error.message 
+        });
+    }
+}
+
+export { CreatePromotions, RetrievePromotions, EditPromotions, DeletePromotions };

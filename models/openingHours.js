@@ -1,156 +1,87 @@
 import mongoose from "mongoose";
 
-const tenantSchema = mongoose.Schema(
+const openingHoursSchema = mongoose.Schema(
   {
     tenant_id: {
-      type: String,
-      required: true,
+        type: String,
+        required: true,
     },
-    name: {
-      type: String,
-      required: true,
-    },
-    email: {
-      type: String,
-      required: true,
-      unique: true,
-    },
-    address: {
-      type: String,
-      default: "please input address",
-    },
-    phoneNumber: {
-      type: String,
-      default: "please input phone number",
-    },
-    password: {
-      type: String,
-      required: true,
-    },
-    verified: {
-      type: Boolean,
-    },
-    profileColor: {
-      type: String,
-      default: "#424242",
-    },
-    taxCharge: { 
-      type: Number, 
-      required: true, 
-      default: 10
-    },
-    serviceCharge: { 
-      type: Number, 
-      required: true, 
-      default: 10
-    },
-    contract: {
-      startingDate: {
-        type: Date,
-        required : true,
-        default: 0,
-      },
-      duration: {
-        type: Number,
-        required : true,
-        default: 0,
-      },
-    },
-    openingDays: [
-        { 
-        day       : { type: String, default: "Monday" },
+    Monday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-      { 
-        day       : { type: String, default: "Tuesday" },
+    },
+    Tuesday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-      { 
-        day       : { type: String, default: "Wednesday" },
+    },
+    Wednesday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-      { 
-        day       : { type: String, default: "Thursday" },
+    },
+    Thursday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-      { 
-        day       : { type: String, default: "Friday" },
+    },
+    Friday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-      { 
-        day       : { type: String, default: "Saturday" },
+    },
+    Saturday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      },
-     { 
-        day       : { type: String, default: "Sunday" },
+    },
+    Sunday: { 
         is24Hours : { type: Boolean, default: false },
-        isClosed  : { type: Boolean, default: false },
+        isOpen    : { type: Boolean, default: true },
         OpenHour  : { type: String, default: "00" },
         OpenMins  : { type: String, default: "00" },
         OpenTF    : { type: String, default: "AM" },
         CloseHour : { type: String, default: "00" },
         CloseMins : { type: String, default: "00" },
         CloseTF   : { type: String, default: "PM" },
-      }
-    ],
-  },
-  {
-    timestamps: true,
-  }
+    }
+},
+{
+timestamps: true,
+}
 );
 
-tenantSchema.set("toJSON", {
-  virtuals: true,
-  versionKey: false,
-  transform: function (doc, ret) {
-    delete ret._id;
-    delete ret.id;
-    delete ret.password;
-  },
-});
-
-const Tenant = mongoose.model("Tenant", tenantSchema);
+const OpeningHours = mongoose.model("Opening Hours", openingHoursSchema);
 
 export default Tenant;

@@ -6,6 +6,9 @@ import dotenv from "dotenv";
 import management from "./routes/management.js";
 import tenant from "./routes/tenant.js";
 import user from "./routes/user.js";
+import order from "./routes/order.js";
+import promo from "./routes/promo.js";
+import menu from "./routes/menu.js";
 
 dotenv.config();
 
@@ -26,6 +29,9 @@ connection.once("open", () => {
 app.use('/api/management', management);
 app.use('/api/tenant', tenant);
 app.use('/api/user', user);
+app.use('/api/order', order);
+app.use('/api/promo', promo);
+app.use('/api/menu', menu)
 
 app.listen(port, () => {
     console.log('Server is running on port:' , port );

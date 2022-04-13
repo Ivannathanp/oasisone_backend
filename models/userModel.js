@@ -16,13 +16,22 @@ const userSchema = mongoose.Schema(
     },
     lastOrder: {
       type: Date,
-      required: true,
+      required: false,
     },
   },
   {
     timestamps: true,
   }
 );
+
+userSchema.set("toJSON", {
+  virtuals: true,
+  versionKey: false,
+  transform: function (doc, ret) {
+    delete ret._id;
+    delete ret.id;
+  },
+});
 
 
 const User = mongoose.model("User", userSchema);

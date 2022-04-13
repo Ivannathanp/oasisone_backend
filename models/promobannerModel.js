@@ -6,7 +6,7 @@ const promobannerSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    promotion: [{
+    promotions: [{
       id: {
         type: String,
         required: true,

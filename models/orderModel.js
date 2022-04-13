@@ -40,6 +40,11 @@ const orderSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    order_instruction: {
+      type: String,
+      required: false,
+      default: '',
+    }
   },
   {
     timestamps: true,
