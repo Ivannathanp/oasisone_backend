@@ -2,7 +2,7 @@ import express from "express";
 const router = express.Router();
 
 import { 
-    CreateOrder, TenantRetrieveOrder
+    CreateOrder, TenantRetrieveOrder, TenantEditStatus
 } from '../controllers/Order/orderdata.js';
 
 
@@ -12,5 +12,7 @@ router.post("/create", CreateOrder );
 // Retreive
 router.get("/retrieve/:tenant_id", TenantRetrieveOrder );
 
+// Edit
+router.post("/edit/:order_id", TenantEditStatus );
 
 export default router;

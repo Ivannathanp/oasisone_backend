@@ -11,6 +11,10 @@ const menuSchema = mongoose.Schema(
         type: String,
         required: true,
       },
+      index:  {
+        type: Number,
+        required: true,
+      },
       name: {
         type: String,
         required: true,
@@ -42,7 +46,7 @@ const menuSchema = mongoose.Schema(
           required: true,
         },
         quantity: {
-          type: String,
+          type: Number,
           required: true,
         },
         isAvailable: {

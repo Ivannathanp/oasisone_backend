@@ -7,8 +7,8 @@ const tableSchema = mongoose.Schema(
       required: true,
     },
     table: [{
-        index:{
-            type: Number,
+        id: {
+          type: String,
         },
         status: {
             type: String, 
@@ -22,13 +22,15 @@ const tableSchema = mongoose.Schema(
         },
         timeStart: {
             type: Date,
+            default : new Date ("2022-01-01")
         },
         customerCount: {
             type: Number,
+            default: 0,
         },
         order_id: {
             type: String, 
-            required: true,
+            default: 'NULL'
         }
     }]
   },

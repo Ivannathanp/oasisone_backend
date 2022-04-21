@@ -8,14 +8,15 @@ async function CreateCategories(req, res) {
 
     // Category ID
     let cat_id;
-    let tempId = Math.floor(Math.random() * 999);
+    const generateID = () => Math.floor(Math.random() * 9999);
+    let tempId = generateID();
 
     const existingId = await Menu.findOne({
       "category.id": "C-" + tempId,
     });
 
     if (existingId) {
-      tempId = new Math.floor(Math.random() * 999);
+      tempId = generateID();
       return tempId;
     }
     cat_id = "C-" + tempId;
@@ -30,6 +31,7 @@ async function CreateCategories(req, res) {
         category: [
           {
             id: cat_id,
+            index: 1,
             name: cat_name,
           },
         ],
@@ -54,7 +56,12 @@ async function CreateCategories(req, res) {
       $and: [{ tenant_id: tenant_id }, { "category.name": { $ne: cat_name } }],
     });
 
-    console.log(notExistingMenu)
+    const amount = await Menu.aggregate([{
+      $project: {
+        _id   : 0,
+        count : { $size: "$category"}
+      }
+    }]);
 
     if (existingTenant && notExistingMenu) {
       await Menu.updateOne(
@@ -65,6 +72,7 @@ async function CreateCategories(req, res) {
           $push: {
             category: {
               id: cat_id,
+              index: amount[0].count + 1,
               name: cat_name,
             },
           },
@@ -107,9 +115,18 @@ async function GetCategory(req, res) {
   try {
     const { tenant_id } = req.params;
 
-    const checkCategory = await Menu.findOne({
-      tenant_id: tenant_id,
-    });
+    const checkCategory = await Menu.aggregate([
+      { $match  : { tenant_id: tenant_id } },
+      { $unwind : '$category' },
+      { $sort   : { "category.index" : 1 } },
+      { $project: { 
+          _id: 0,
+          "category": 1,
+        } 
+      }
+    ])
+
+    console.log(checkCategory)
 
     if (checkCategory) {
       return res.status(200).json({
@@ -129,6 +146,184 @@ async function GetCategory(req, res) {
       status: "FAILED",
       message: error.message,
     });
+  }
+}
+
+// Edit Category Name
+async function EditCategory(req, res) {
+  try {
+    const { tenant_id } = req.params;
+    const { cat_id, cat_name } = req.body;
+
+    const existingMenu = await Menu.findOne({
+      $and: [
+        { tenant_id: tenant_id },
+        { "category.id": cat_id },
+        { "category.name": { $ne: cat_name } }
+      ],
+    });
+
+    if (existingMenu) {
+      const updateMenu = await Menu.updateOne(
+        {
+          "category.id": cat_id,
+        },
+        {
+          $set: {
+            "category.$.name": cat_name,
+          },
+        }
+      );
+
+      if (updateMenu) {
+        const checkAfterUpdate = await Menu.findOne({
+          "category.id": cat_id,
+        });
+
+        return res.status(200).json({
+          status: "SUCCESS",
+          message: "Category has been updated",
+          data: checkAfterUpdate,
+        });
+      } else {
+        return res.status(404).json({
+          status: "FAILED",
+          message: "Category failed to be updated",
+        });
+      }
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Category name has been used",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
+  }
+}
+
+// Edit Category Index
+async function EditCategoryIndex(req, res) {
+  try {
+    const { tenant_id } = req.params;
+    const { cat_id, cat_index } = req.body;
+
+    const existingMenu = await Menu.findOne({
+      $and: [
+        { tenant_id: tenant_id },
+        { "category.id": cat_id },
+      ],
+    });
+
+    if (existingMenu) {
+      const currentIndex = await Menu.findOne({
+        "category.id": cat_id
+      }, {
+        category: { $elemMatch : { id : cat_id } }
+      })
+
+      // console.log(currentIndex.category[0].index)
+
+      const ingoingIndex = await Menu.findOne({
+        "category.id": cat_id
+      }, {
+        category: { $elemMatch : { index : cat_index } }
+      })
+
+      // console.log(ingoingIndex)
+
+      // Swapping Sequence
+      await Menu.updateOne(
+        {
+          "category.id": ingoingIndex.category[0].id,
+        },
+        {
+          $set: {
+            "category.$.index": currentIndex.category[0].index,
+          },
+        }
+      );
+
+      await Menu.updateOne(
+        {
+          "category.id": cat_id,
+        },
+        {
+          $set: {
+            "category.$.index": ingoingIndex.category[0].index,
+          },
+        }
+      );
+
+      const checkAfterUpdate = await Menu.findOne({
+        "category.id": cat_id,
+      });
+
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Category has been updated",
+        data: checkAfterUpdate,
+      });
+      
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Category name has been used",
+      });
+    }
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
+  }
+}
+
+// Delete Category
+async function DeleteCategory(req, res) {
+  try {
+      const { cat_id } = req.params;
+
+      const checkCategory = await Menu.findOne({
+          "category.id" : cat_id
+      })
+      
+      if ( checkCategory ) {
+          const deleteCategory = await Menu.updateOne({
+            "category.id" : cat_id
+          }, {
+            $pull: 
+              {
+                "category" : { id: cat_id },
+              }
+          })
+
+          if ( deleteCategory ) {
+              return res.status(200).json({
+                  status  : "SUCCESS",
+                  message : "Category has been deleted",
+              })
+          }
+
+      } else {
+          return res.status(404).json({
+              status  : "FAILED",
+              message : "Category has not been deleted"
+          })
+      }
+
+  } catch (error) {
+      console.log(error);
+      res.status(500).json({ 
+        status  : "FAILED",
+        message : error.message 
+      });
   }
 }
 
@@ -162,7 +357,10 @@ async function CreateMenu(req, res) {
     menu_id = "M-" + tempId;
 
     const checkCategory = await Menu.findOne({
-      $and: [{ tenant_id: tenant_id }, {"category.menu.name": {$ne: menu_name}}],
+      $and: [
+        { tenant_id: tenant_id },
+        { "category.menu.name": { $ne: menu_name } },
+      ],
     });
 
     if (checkCategory) {
@@ -186,7 +384,7 @@ async function CreateMenu(req, res) {
         }
       );
 
-      if (UpdateMenu) {
+      if ( UpdateMenu ) {
         const RetrieveLatestMenu = await Menu.findOne({
           "category.id": cat_id,
         });
@@ -205,11 +403,11 @@ async function CreateMenu(req, res) {
         });
       }
     } else {
-        return res.status(404).json({
-          status: "FAILED",
-          message: "Menu name exists",
-        });
-      }
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Menu name exists",
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -219,55 +417,76 @@ async function CreateMenu(req, res) {
   }
 }
 
-// Edit Category
-async function EditCategory(req, res) {
+// Get All Menu
+async function GetAllMenu(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { cat_id, cat_name } = req.body;
+    const { cat_id } = req.body;
 
-    const existingTenant = await Menu.findOne({
-      tenant_id: tenant_id,
-    });
+    const checkMenu = await Menu.findOne(
+      {
+        $and: [{ tenant_id: tenant_id }, { "category.id": cat_id }],
+      },
+      {
+        category: { $elemMatch: { id: cat_id } },
+      }
+    );
 
-    const notExistingMenu = await Menu.findOne({
-        $and: [{ tenant_id: tenant_id }, { "category.name": { $ne: cat_name } }],
+    if (checkMenu) {
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Category has been retrieved",
+        data: checkMenu,
       });
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Category has not been retrieved",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
+  }
+}
 
-      console.log(notExistingMenu)
-    if (existingTenant && notExistingMenu) {
-      const updateMenu = await Menu.updateOne(
-        {
-          "category.id": cat_id,
-        },
-        {
-          $set: {
-            "category.$.name": cat_name,
-          },
+// Get Specific Menu
+async function GetMenu(req, res) {
+  try {
+    const { tenant_id, menu_id } = req.params;
+
+    const checkMenu = await Menu.aggregate([
+      { $match: { tenant_id: tenant_id } }, 
+      { $unwind: "$category" },
+      { $unwind: '$category.menu' },
+      { $match: { "category.menu.id": menu_id } }, 
+      { $project: {
+        _id       : 0,
+        tenant_id : 0,
+        category  : {
+          _id   : 0,
+          id    : 0,
+          index : 0,
+          name  : 0,
         }
-      );
-
-      if (updateMenu) {
-        const checkAfterUpdate = await Menu.findOne({
-          "category.id": cat_id,
-        });
-
-        return res.status(200).json({
-          status: "SUCCESS",
-          message: "Category has been updated",
-          data: checkAfterUpdate,
-        });
-      } else {
-        return res.status(404).json({
-          status: "FAILED",
-          message: "Category failed to be updated",
-        });
-      }
-    }else {
-        return res.status(404).json({
-          status: "FAILED",
-          message: "Category name exists",
-        });
-      }
+      } }
+    ])
+    
+    if (checkMenu) {
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Category has been retrieved",
+        data: checkMenu,
+      });
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Category has not been retrieved",
+      });
+    }
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -279,77 +498,145 @@ async function EditCategory(req, res) {
 
 // Edit Menu
 async function EditMenu(req, res) {
-    try {
-        const { tenant_id } = req.params;
-        const {
-            cat_id,
-          menu_id,
-          menu_name,
-          menu_duration,
-          menu_desc,
-          menu_isRecommended,
-          menu_price,
-          menu_quantity,
-          menu_isAvailable,
-        } = req.body;
-               
-        const checkMenu = await Menu.findOne({
-            $and: [{"category.menu.id":menu_id}, {"category.menu.name": {$ne: menu_name}}],
+  try {
+    const { tenant_id } = req.params;
+    const {
+      cat_id,
+      menu_id,
+      menu_name,
+      menu_duration,
+      menu_desc,
+      menu_isRecommended,
+      menu_price,
+      menu_quantity,
+      menu_isAvailable,
+    } = req.body;
+
+    const checkMenu = await Menu.findOne({
+      $and: [
+        { tenant_id: tenant_id },
+        { "category.id": cat_id },
+        { "category.menu.id": menu_id },
+        { "category.menu.name": { $ne: menu_name } },
+      ],
+    });
+
+    if (checkMenu) {
+      const UpdateMenu = await Menu.updateOne(
+        {
+          $and: [
+            { "category.id": cat_id }, 
+            { "category.menu.id": menu_id }
+          ],
+        },
+        {
+          $set: {
+            "category.$[outer].menu.$[inner].name": menu_name,
+            "category.$[outer].menu.$[inner].duration": menu_duration,
+            "category.$[outer].menu.$[inner].description": menu_desc,
+            "category.$[outer].menu.$[inner].isRecommended": menu_isRecommended,
+            "category.$[outer].menu.$[inner].price": menu_price,
+            "category.$[outer].menu.$[inner].quantity": menu_quantity,
+            "category.$[outer].menu.$[inner].isvailable": menu_isAvailable,
+          },
+        },
+        {
+          arrayFilters: [{ "outer.id": cat_id }, { "inner.id": menu_id }],
+        }
+      );
+
+      console.log(UpdateMenu);
+
+      if (UpdateMenu) {
+        const RetrieveLatestMenu = await Menu.findOne({
+          "category.id": cat_id,
         });
 
-        console.log(checkMenu)
-        if (checkMenu) {
-          const UpdateMenu = await Menu.updateOne(
-            {
-             "category.menu.id": menu_id
-            },
-            {
-              $set: {
-             
-                    "category.menu.$.id": menu_id,
-                    "category.menu.$.name": menu_name,
-                    "category.menu.$.duration": menu_duration,
-                    "category.menu.$.description": menu_desc,
-                    "category.menu.$.isRecommended": menu_isRecommended,
-                    "category.menu.$.price": menu_price,
-                    "category.menu.$.quantity": menu_quantity,
-                    "category.menu.$.isvailable": menu_isAvailable,
-            
-              },
-            }
-          );
-    
-          if (UpdateMenu) {
-            const RetrieveLatestMenu = await Menu.findOne({
-              "category.id": cat_id,
-            });
-    
-            if (RetrieveLatestMenu) {
-              return res.status(200).json({
-                status: "SUCCESS",
-                message: "Category has been retrieved",
-                data: RetrieveLatestMenu,
-              });
-            }
-          } else {
-            return res.status(404).json({
-              status: "FAILED",
-              message: "Category has not been created",
-            });
-          }
+        if (RetrieveLatestMenu) {
+          return res.status(200).json({
+            status: "SUCCESS",
+            message: "Menu has been retrieved",
+            data: RetrieveLatestMenu,
+          });
         } else {
-            return res.status(404).json({
-              status: "FAILED",
-              message: "Menu name exists",
-            });
-          }
-      } catch (error) {
-        console.log(error);
-        res.status(500).json({
+          return res.status(404).json({
+            status: "FAILED",
+            message: "Menu has not been retrieved",
+            data: RetrieveLatestMenu,
+          });
+        }
+      } else {
+        return res.status(404).json({
           status: "FAILED",
-          message: error.message,
+          message: "Menu has not been updated",
         });
       }
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Menu name has been used",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
   }
+}
 
-export { CreateCategories, GetCategory, CreateMenu, EditCategory, EditMenu };
+// Delete Menu
+async function DeleteMenu(req, res) {
+  try {
+      const { menu_id } = req.params;
+
+      const checkMenu = await Menu.findOne({
+          "category.$.menu.id" : menu_id
+      })
+
+      if ( checkMenu ) {
+          const deleteMenu = await Menu.updateOne({
+              "category.menu.id" : menu_id
+          }, {
+              $pull: 
+              {
+                  "category.$.menu" : { id: menu_id },
+              }
+          })
+
+          if ( deleteMenu ) {
+              return res.status(200).json({
+                  status  : "SUCCESS",
+                  message : "Menu has been deleted",
+              })
+          }
+
+      } else {
+          return res.status(404).json({
+              status  : "FAILED",
+              message : "Menu has not been deleted"
+          })
+      }
+
+  } catch (error) {
+      console.log(error);
+      res.status(500).json({ 
+        status  : "FAILED",
+        message : error.message 
+      });
+  }
+}
+
+export {
+  CreateCategories,
+  GetCategory,
+  EditCategory,
+  EditCategoryIndex,
+  DeleteCategory,
+  CreateMenu,
+  GetAllMenu,
+  GetMenu,
+  EditMenu,
+  DeleteMenu,
+};

@@ -26,17 +26,28 @@ const orderSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    order_menu:[{
-      menu_id: {
-        type: String,
-        required: true,
-      },
-      quantity:{
-        type: String,
-        required: true,
-      },
-    }],
+    order_menu:[{ type: {}, required: false }],
+    order_item:{
+      type: Number,
+      required: true,
+    },
     order_total:{
+      type: String,
+      required: true,
+    },
+    order_servicecharge:{
+      type: String,
+      required: true,
+    },
+    order_taxcharge:{
+      type: String,
+      required: true,
+    },
+    user_name:{
+      type: String,
+      required: true,
+    },
+    user_phonenumber:{
       type: String,
       required: true,
     },
@@ -44,7 +55,11 @@ const orderSchema = mongoose.Schema(
       type: String,
       required: false,
       default: '',
-    }
+    },
+    user_guest:{
+      type: Number,
+      required: true,
+    },
   },
   {
     timestamps: true,

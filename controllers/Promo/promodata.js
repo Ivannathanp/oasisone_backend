@@ -1,5 +1,6 @@
 import Tenant from "../../models/tenantModel.js";
 import Promo from "../../models/promobannerModel.js";
+import { generate } from "randomstring";
 
 // Create Promotions
 async function CreatePromotions(req, res) {
@@ -7,14 +8,14 @@ async function CreatePromotions(req, res) {
         const { tenant_id, promo_name, promo_start, promo_end, promo_details } = req.body;
 
         let promo_id;
-        let tempId = Math.floor( Math.random() * 9999999999 );
+        const generateID = () => Math.floor(Math.random() * 99999999);
+        let tempId = generateID();
         
-        const existingId = await Promo.findOne({ promo_id: "P-" + tempId });
+        const existingId = await Promo.findOne({ "promotions.id": "P-" + tempId });
 		if ( existingId ) {
-			tempId = new Math.floor( Math.random() * 9999999999 );
+			tempId =  generateID();
 			return tempId;
 		}
-
         promo_id = "P-" + tempId;
 
         const existingPromo = await Promo.findOne({
@@ -22,12 +23,12 @@ async function CreatePromotions(req, res) {
         })
 
         if ( existingPromo ) {
-            const UpdatePromo = await Promo.updateOne({
+            await Promo.updateOne({
                 tenant_id: tenant_id
             }, {
                 $push: {
                     "promotions": {
-                        id              : promo_id,
+                        // id              : promo_id,
                         name            : promo_name,
                         startingPeriod  : promo_start,
                         endingPeriod    : promo_end,
@@ -43,13 +44,13 @@ async function CreatePromotions(req, res) {
             if ( RetrieveLatestPromo ) {
                 return res.status(200).json({
                     status  : "SUCCESS",
-                    message : "Order has been placed",
+                    message : "Promotions has been added",
                     data    : RetrieveLatestPromo,
                 })
             } else {
                 return res.status(404).json({
                     status  : "FAILED",
-                    message : "Order has not been placed"
+                    message : "Promotions has not been added"
                 })
             }
 
@@ -57,7 +58,7 @@ async function CreatePromotions(req, res) {
             const newPromo = new Promo({
                 tenant_id   : tenant_id,
                 promotions  : [{
-                    id              : promo_id,
+                    // id              : promo_id,
                     name            : promo_name,
                     startingPeriod  : promo_start,
                     endingPeriod    : promo_end,
@@ -69,13 +70,13 @@ async function CreatePromotions(req, res) {
             if ( newPromo ) {
                 return res.status(200).json({
                     status  : "SUCCESS",
-                    message : "Order has been placed",
+                    message : "Promotions has been created",
                     data    : newPromo,
                 })
             } else {
                 return res.status(404).json({
                     status  : "FAILED",
-                    message : "Order has not been placed"
+                    message : "Promotions has not been created"
                 })
             }
         }

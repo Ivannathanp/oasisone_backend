@@ -2,34 +2,43 @@ import express from "express";
 const router = express.Router();
 
 import { 
-    CreateCategories, GetCategory, CreateMenu, EditCategory, EditMenu
+    CreateCategories, GetCategory, EditCategory, DeleteCategory,
+    EditCategoryIndex, CreateMenu, GetAllMenu, GetMenu, EditMenu, DeleteMenu,
 } from '../controllers/Menu/menu.js';
 
 // View All Menu (Customer)
 router.post("/:tenant_id",  );
 
-// Get Category
-router.get("/:tenant_id/category", GetCategory);
 
-// Get Menu
-router.get("/:tenant_id/menu",  );
+// Get Category
+router.get("/category/:tenant_id", GetCategory);
 
 // Add Category
-router.post("/:tenant_id/category/create", CreateCategories );
-
-// Add Menu
-router.post("/:tenant_id/menu/create", CreateMenu );
+router.post("/category/create/:tenant_id", CreateCategories );
 
 // Edit Category
-router.post("/:tenant_id/category/edit", EditCategory );
+router.post("/category/edit/:tenant_id", EditCategory );
 
-// Edit Menu
-router.post("/:tenant_id/menu/edit", EditMenu );
+// Edit Category Index
+router.post("/category/edit/index/:tenant_id", EditCategoryIndex );
 
 // Delete Category
-router.post("/:tenant_id/category/delete",  );
+router.post("/category/delete/:cat_id", DeleteCategory );
+
+
+// Get All Menu
+router.post("/all/:tenant_id", GetAllMenu );
+
+// Get Menu
+router.get("/:tenant_id/:menu_id", GetMenu );
+
+// Add Menu
+router.post("/create/:tenant_id", CreateMenu );
+
+// Edit Menu
+router.post("/edit/:tenant_id", EditMenu );
 
 // Delete Menu
-router.post("/:tenant_id/menu/delete",  );
+router.post("/delete/:menu_id", DeleteMenu );
 
-export default router;
+export default router; 

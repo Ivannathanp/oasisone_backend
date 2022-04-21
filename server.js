@@ -9,6 +9,7 @@ import user from "./routes/user.js";
 import order from "./routes/order.js";
 import promo from "./routes/promo.js";
 import menu from "./routes/menu.js";
+import table from "./routes/table.js";
 
 dotenv.config();
 
@@ -31,7 +32,8 @@ app.use('/api/tenant', tenant);
 app.use('/api/user', user);
 app.use('/api/order', order);
 app.use('/api/promo', promo);
-app.use('/api/menu', menu)
+app.use('/api/menu', menu);
+app.use('/api/table', table); 
 
 app.listen(port, () => {
     console.log('Server is running on port:' , port );
