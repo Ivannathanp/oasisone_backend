@@ -1,6 +1,4 @@
-import Tenant from "../../models/tenantModel.js";
 import Promo from "../../models/promobannerModel.js";
-import { generate } from "randomstring";
 
 // Create Promotions
 async function CreatePromotions(req, res) {
