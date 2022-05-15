@@ -5,9 +5,8 @@ import {
     CreatePromotions, RetrievePromotions, EditPromotions, DeletePromotions
 } from '../controllers/Promo/promodata.js';
 
-
 // Create Promotions
-router.post("/create", CreatePromotions );
+router.post("/create/:tenant_id", CreatePromotions );
 
 // Retrieve Promotions
 router.get ("/retrieve/:tenant_id", RetrievePromotions );

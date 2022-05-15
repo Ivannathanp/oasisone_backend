@@ -11,13 +11,17 @@ const userSchema = mongoose.Schema(
       required: true,
     },
     phoneNumber: {
-      type: Number,
+      type: String,
       required: true,
     },
     lastOrder: {
       type: Date,
       required: false,
     },
+    tenant_name: {
+      type: String,
+      required: true,
+    }
   },
   {
     timestamps: true,

@@ -6,6 +6,10 @@ const tenantSchema = mongoose.Schema(
       type: String,
       required: true,
     },
+    profileImage:{
+      type: String, 
+      default: 'http://localhost:5000/api/images/avatar/render/default_avatar.jpg',
+    },
     name: {
       type: String,
       required: true,
@@ -44,17 +48,8 @@ const tenantSchema = mongoose.Schema(
       required: true, 
       default: 10
     },
-    contract: {
-      startingDate: {
-        type: Date,
-        required : true,
-        default: 0,
-      },
-      duration: {
-        type: Number,
-        required : true,
-        default: 0,
-      },
+    qrCode: {
+      type: String,
     },
     openingDays: [
         { 

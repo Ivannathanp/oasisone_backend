@@ -20,14 +20,15 @@ async function CreateTables(req, res) {
       const existingTenant = await Table.findOne({
         tenant_id: tenant_id,
       });
-  
+
+     
       if (!existingTenant) {
         const newTable = new Table({
           tenant_id: tenant_id,
           table: [
-            {             
-              // index: 1,      
+            {                 
               id    : table_id,
+              index: 1,
               status: 'EMPTY',   
             },
           ],
@@ -48,15 +49,22 @@ async function CreateTables(req, res) {
         }
       }
   
-      if (existingTenant) {
-        const amount = await Table.aggregate([{
-            $project: {
-            _id   : 0,
-            count : { $size: "$table"}
-            }
-        }]);
-        console.log(amount)
+      const amount = await Table.aggregate([{
+        $project: {
+        _id   : 0,
+        count : { $size: "$table"}
+        }
+    }]);
 
+      if (existingTenant) {
+        for ( let j = 1; j <= amount[0].count; j++ ) {
+          let notExistingIndex = await Table.findOne({
+            $and: [{ tenant_id: tenant_id }, { "table.index": { $ne: j } }],
+          });
+
+      
+
+          while ( notExistingIndex != null ) {
         await Table.updateOne(
           {
             tenant_id: tenant_id,
@@ -65,14 +73,11 @@ async function CreateTables(req, res) {
             $push: {
               table: {
                 id    : table_id,
-                status: amount[0].count + 1,   
-                // index: amount[0].count + 1,
-                // status : 'ORIGINALLY TABLE ' + (amount[0].count + 1)
+                index : j,               
               },
             },
           }
         );
-  
         const RetrieveLatestTable = await Table.findOne({
           tenant_id: tenant_id,
         });
@@ -81,7 +86,7 @@ async function CreateTables(req, res) {
           return res.status(200).json({
             status: "SUCCESS",
             message: "Table has been created",
-            data: RetrieveLatestTable,
+            data: RetrieveLatestTable.table,
           });
         } else {
           return res.status(404).json({
@@ -89,7 +94,50 @@ async function CreateTables(req, res) {
             message: "Table has not been created",
           });
         }
-      } 
+          }
+          if ( j == amount[0].count ) { 
+            await Table.updateOne(
+              {
+                tenant_id: tenant_id,
+              },
+              {
+                $push: {
+                  table: {
+                    id: table_id,
+                    index: amount[0].count + 1,
+                    
+                  },
+                },
+              }
+            );
+  
+            const RetrieveLatestTable = await Table.findOne({
+              tenant_id: tenant_id,
+            });
+      
+            if (RetrieveLatestTable) {
+              return res.status(200).json({
+                status: "SUCCESS",
+                message: "Table has been retrieved",
+                data: RetrieveLatestTable.table,
+              });
+            } else {
+              return res.status(404).json({
+                status: "FAILED",
+                message: "Table has not been retrieved",
+              });
+            }
+          }
+        }
+        
+      } else {
+        return res.status(404).json({
+          status: "FAILED",
+          message: "Category exists",
+        });
+      }
+        
+       
     } catch (error) {
       console.log(error);
       res.status(500).json({
@@ -103,10 +151,19 @@ async function CreateTables(req, res) {
 async function GetTables(req, res) {
     try {
         const { tenant_id } = req.params;
+
+
+        const checkTable = await Table.aggregate([
+          { $match  : { tenant_id: tenant_id } },
+          { $unwind : '$table' },
+          { $sort   : { "table.index" : 1 } },
+          { $project: { 
+              _id: 0,
+              "table": 1,
+            } 
+          }
+        ])
     
-        const checkTable = await Table.findOne({
-            tenant_id: tenant_id 
-        })
   
         if (checkTable) {
             return res.status(200).json({
@@ -217,7 +274,6 @@ async function RemoveTableContent(req, res) {
         const checkTable = await Table.findOne({
             tenant_id: tenant_id
         }, { table: { $elemMatch: { id: table_id } }} )
-        console.log(checkTable)
 
         if ( checkTable ) {
             const deleteTable= await Table.updateOne({

@@ -13,15 +13,15 @@ import {
   Login, 
   VerifyEmail, 
   PasswordResetMail, 
-  ActualResetPassword 
+  ActualResetPassword, 
 } from '../controllers/Auth/authTenant.js';
 
-import { EditProfileName, 
-  EditProfileColor, 
-  EditProfileAddress, 
+import { 
+  GetTenantDetails,
+  EditProfile,
   EditTaxCharge, 
   EditServiceCharge, 
-  EditOpeningHours 
+  EditOpeningHours
 } from '../controllers/Profile/profileTenant.js';
 
 // Signup
@@ -43,14 +43,8 @@ router.post("/passwordreset", ActualResetPassword);
 router.post("/edit/taxcharges", EditTaxCharge);
 router.post("/edit/servicecharges", EditServiceCharge);
 
-// Change Profile Color
-router.post("/edit/profilename", EditProfileName);
-
-// Change Profile Color
-router.post("/edit/profilecolor", EditProfileColor);
-
-// Change Profile Address
-router.post("/edit/profileaddress", EditProfileAddress);
+// Edit Profile
+router.post("/edit/:tenant_id", EditProfile);
 
 // Change Opening Hours
 router.post("/edit/openinghours", EditOpeningHours);
@@ -60,13 +54,8 @@ router.post("/edit/openinghours", EditOpeningHours);
 //   res.sendFile(path.join(__dirname, "./views/verified.html"));
 // });
 
-router.get("/openinghours", EditOpeningHours);
+// router.get("/openinghours", EditOpeningHours);
 
-router.get("/user", (req, res) => {
-  Tenant.find()
-    .then((result) => {
-      res.json(result)
-    })
-  });
+router.get("/user/:tenant_id", GetTenantDetails);
 
 export default router;

@@ -8,7 +8,7 @@ import {
 // Signup
 router.post("/signup", Register);
 
-//
-router.post("/")
+// Get tenant data
+// router.get("/tenant/:tenant_id", getTenantData)
 
 export default router;

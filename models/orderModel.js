@@ -11,7 +11,7 @@ const orderSchema = mongoose.Schema(
       required: true,
     },
     order_status: {
-      type: String,
+      type: Number,
       required: true,
     },
     order_table: {
@@ -60,6 +60,9 @@ const orderSchema = mongoose.Schema(
       type: Number,
       required: true,
     },
+    reject_reason:{
+      type: String,
+    }
   },
   {
     timestamps: true,

@@ -1,41 +1,50 @@
-import Promo from "../../models/promobannerModel.js";
+import Promobanner from "../../models/promobannerModel.js";
+import fs from 'fs'
+import config from '../../config.js'
+import path from "path";
+import { fileURLToPath } from "url";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Create Promotions
 async function CreatePromotions(req, res) {
     try {
-        const { tenant_id, promo_name, promo_start, promo_end, promo_details } = req.body;
+        const {tenant_id} = req.params;
+        const { promo_name, promo_start, promo_end, promo_details, promo_image } = req.body;
 
         let promo_id;
         const generateID = () => Math.floor(Math.random() * 99999999);
         let tempId = generateID();
         
-        const existingId = await Promo.findOne({ "promotions.id": "P-" + tempId });
+        const existingId = await Promobanner.findOne({ "promotions.id": "P-" + tempId });
 		if ( existingId ) {
 			tempId =  generateID();
 			return tempId;
 		}
         promo_id = "P-" + tempId;
 
-        const existingPromo = await Promo.findOne({
+        const existingPromo = await Promobanner.findOne({
             tenant_id: tenant_id
         })
 
         if ( existingPromo ) {
-            await Promo.updateOne({
+            await Promobanner.updateOne({
                 tenant_id: tenant_id
             }, {
                 $push: {
                     "promotions": {
-                        // id              : promo_id,
+                        id              : promo_id,
                         name            : promo_name,
                         startingPeriod  : promo_start,
                         endingPeriod    : promo_end,
                         details         : promo_details,
+                        promoImage      : promo_image,
                     }
                 }
             })
 
-            const RetrieveLatestPromo = await Promo.findOne({
+            const RetrieveLatestPromo = await Promobanner.findOne({
                 tenant_id: tenant_id
             })
 
@@ -53,23 +62,23 @@ async function CreatePromotions(req, res) {
             }
 
         } else {
-            const newPromo = new Promo({
+            const newPromobanner = new Promobanner({
                 tenant_id   : tenant_id,
                 promotions  : [{
-                    // id              : promo_id,
+                    id              : promo_id,
                     name            : promo_name,
                     startingPeriod  : promo_start,
                     endingPeriod    : promo_end,
                     details         : promo_details,
                 }]
             })
-            await newPromo.save();
+            await newPromobanner.save();
 
-            if ( newPromo ) {
+            if ( newPromobanner ) {
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Promotions has been created",
-                    data    : newPromo,
+                    data    : newPromobanner,
                 })
             } else {
                 return res.status(404).json({
@@ -94,7 +103,7 @@ async function RetrievePromotions(req, res) {
     try {
         const { tenant_id } = req.params;
 
-        const checkPromo = await Promo.findOne({
+        const checkPromo = await Promobanner.findOne({
             tenant_id: tenant_id
         })
 
@@ -126,12 +135,12 @@ async function EditPromotions(req, res) {
         const { promo_id } = req.params;
         const { promo_name, promo_start, promo_end, promo_details } = req.body;
 
-        const checkPromo = await Promo.findOne({
+        const checkPromo = await Promobanner.findOne({
             "promotions.id" : promo_id
         }, { promotions: { $elemMatch: { id: promo_id } }} )
 
         if ( checkPromo ) {
-            const updatePromo = await Promo.updateOne({
+            const updatePromo = await Promobanner.updateOne({
                 "promotions.id" : promo_id
             }, {
                 $set: 
@@ -144,7 +153,7 @@ async function EditPromotions(req, res) {
             })
 
             if ( updatePromo ) {
-                const checkAfterUpdate = await Promo.findOne({
+                const checkAfterUpdate = await Promobanner.findOne({
                     "promotions.id" : promo_id
                 })
 
@@ -176,12 +185,12 @@ async function DeletePromotions(req, res) {
     try {
         const { promo_id } = req.params;
 
-        const checkPromo = await Promo.findOne({
+        const checkPromo = await Promobanner.findOne({
             "promotions.id" : promo_id
         }, { promotions: { $elemMatch: { id: promo_id } }} )
 
         if ( checkPromo ) {
-            const deletePromo = await Promo.updateOne({
+            const deletePromo = await Promobanner.updateOne({
                 "promotions.id" : promo_id
             }, {
                 $pull: 

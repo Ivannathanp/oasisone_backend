@@ -11,6 +11,9 @@ const promobannerSchema = mongoose.Schema(
         type: String,
         required: true,
       },
+      promoImage:{
+        type: String
+      },
       name: {
         type: String,
         required: true,

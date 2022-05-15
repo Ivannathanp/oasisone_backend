@@ -10,6 +10,9 @@ const tableSchema = mongoose.Schema(
         id: {
           type: String,
         },
+        index:{
+          type: Number,
+        },
         status: {
             type: String, 
             required: true,

@@ -25,7 +25,7 @@ async function CreateCategories(req, res) {
       tenant_id: tenant_id,
     });
 
-    if (!existingTenant) {
+    if (existingTenant) {
       const newMenu = new Menu({
         tenant_id: tenant_id,
         category: [
@@ -64,37 +64,80 @@ async function CreateCategories(req, res) {
     }]);
 
     if (existingTenant && notExistingMenu) {
-      await Menu.updateOne(
-        {
-          tenant_id: tenant_id,
-        },
-        {
-          $push: {
-            category: {
-              id: cat_id,
-              index: amount[0].count + 1,
-              name: cat_name,
+      for ( let j = 1; j <= amount[0].count; j++ ) {
+        let notExistingIndex = await Menu.findOne({
+          $and: [{ tenant_id: tenant_id }, { "category.index": { $ne: j } }],
+        });
+
+        while ( notExistingIndex != null ) {
+          await Menu.updateOne(
+            {
+              tenant_id: tenant_id,
             },
-          },
+            {
+              $push: {
+                category: {
+                  id: cat_id,
+                  index: j,
+                  name: cat_name,
+                },
+              },
+            }
+          );
+
+          const RetrieveLatestMenu = await Menu.findOne({
+            tenant_id: tenant_id,
+          });
+    
+          if (RetrieveLatestMenu) {
+            return res.status(200).json({
+              status: "SUCCESS",
+              message: "Category has been created",
+              data: RetrieveLatestMenu,
+            });
+          } else {
+            return res.status(404).json({
+              status: "FAILED",
+              message: "Category has not been created",
+            });
+          }
         }
-      );
 
-      const RetrieveLatestMenu = await Menu.findOne({
-        tenant_id: tenant_id,
-      });
+        if ( j == amount[0].count ) { 
+          await Menu.updateOne(
+            {
+              tenant_id: tenant_id,
+            },
+            {
+              $push: {
+                category: {
+                  id: cat_id,
+                  index: amount[0].count + 1,
+                  name: cat_name,
+                },
+              },
+            }
+          );
 
-      if (RetrieveLatestMenu) {
-        return res.status(200).json({
-          status: "SUCCESS",
-          message: "Category has been created",
-          data: RetrieveLatestMenu,
-        });
-      } else {
-        return res.status(404).json({
-          status: "FAILED",
-          message: "Category has not been created",
-        });
+          const RetrieveLatestMenu = await Menu.findOne({
+            tenant_id: tenant_id,
+          });
+    
+          if (RetrieveLatestMenu) {
+            return res.status(200).json({
+              status: "SUCCESS",
+              message: "Category has been created",
+              data: RetrieveLatestMenu,
+            });
+          } else {
+            return res.status(404).json({
+              status: "FAILED",
+              message: "Category has not been created",
+            });
+          }
+        }
       }
+      
     } else {
       return res.status(404).json({
         status: "FAILED",
@@ -126,7 +169,6 @@ async function GetCategory(req, res) {
       }
     ])
 
-    console.log(checkCategory)
 
     if (checkCategory) {
       return res.status(200).json({
@@ -219,42 +261,12 @@ async function EditCategoryIndex(req, res) {
       ],
     });
 
-    if (existingMenu) {
-      const currentIndex = await Menu.findOne({
-        "category.id": cat_id
-      }, {
-        category: { $elemMatch : { id : cat_id } }
-      })
-
-      // console.log(currentIndex.category[0].index)
-
-      const ingoingIndex = await Menu.findOne({
-        "category.id": cat_id
-      }, {
-        category: { $elemMatch : { index : cat_index } }
-      })
-
-      // console.log(ingoingIndex)
-
-      // Swapping Sequence
-      await Menu.updateOne(
-        {
-          "category.id": ingoingIndex.category[0].id,
-        },
-        {
-          $set: {
-            "category.$.index": currentIndex.category[0].index,
-          },
-        }
-      );
-
-      await Menu.updateOne(
-        {
+    if ( existingMenu ) {
+      await Menu.updateOne({
           "category.id": cat_id,
-        },
-        {
+        }, {
           $set: {
-            "category.$.index": ingoingIndex.category[0].index,
+            "category.$.index": cat_index,
           },
         }
       );
@@ -334,6 +346,7 @@ async function CreateMenu(req, res) {
     const {
       cat_id,
       menu_name,
+      menu_image,
       menu_duration,
       menu_desc,
       menu_isRecommended,
@@ -373,6 +386,7 @@ async function CreateMenu(req, res) {
             "category.$.menu": {
               id: menu_id,
               name: menu_name,
+              menuImage : menu_image,
               duration: menu_duration,
               description: menu_desc,
               isRecommended: menu_isRecommended,
@@ -421,22 +435,47 @@ async function CreateMenu(req, res) {
 async function GetAllMenu(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { cat_id } = req.body;
 
     const checkMenu = await Menu.findOne(
-      {
-        $and: [{ tenant_id: tenant_id }, { "category.id": cat_id }],
-      },
-      {
-        category: { $elemMatch: { id: cat_id } },
-      }
+     { tenant_id: tenant_id }
+    
     );
 
     if (checkMenu) {
+
+      const combineMenu = await Menu.aggregate([
+        {
+          $unwind: "$category"
+        },       
+        { $unwind: '$category.menu' },
+        {
+          $sort: {
+"category.menu.quantity" : -1,
+          }
+        },
+        {
+          $group: {
+            _id: "",
+            "menu": {
+              $push: "$category.menu"
+            
+            },
+          }
+        },
+        
+       
+        {
+          $project: {
+            _id: 0
+          }
+        } 
+      ])
+
+
       return res.status(200).json({
         status: "SUCCESS",
         message: "Category has been retrieved",
-        data: checkMenu,
+        data: combineMenu,
       });
     } else {
       return res.status(404).json({
@@ -504,6 +543,7 @@ async function EditMenu(req, res) {
       cat_id,
       menu_id,
       menu_name,
+      menu_image,
       menu_duration,
       menu_desc,
       menu_isRecommended,
@@ -520,6 +560,7 @@ async function EditMenu(req, res) {
         { "category.menu.name": { $ne: menu_name } },
       ],
     });
+    
 
     if (checkMenu) {
       const UpdateMenu = await Menu.updateOne(
@@ -532,6 +573,7 @@ async function EditMenu(req, res) {
         {
           $set: {
             "category.$[outer].menu.$[inner].name": menu_name,
+            "category.$[outer].menu.$[inner].menuImage": menu_image,
             "category.$[outer].menu.$[inner].duration": menu_duration,
             "category.$[outer].menu.$[inner].description": menu_desc,
             "category.$[outer].menu.$[inner].isRecommended": menu_isRecommended,
@@ -545,7 +587,6 @@ async function EditMenu(req, res) {
         }
       );
 
-      console.log(UpdateMenu);
 
       if (UpdateMenu) {
         const RetrieveLatestMenu = await Menu.findOne({

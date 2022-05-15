@@ -27,7 +27,7 @@ router.post("/category/delete/:cat_id", DeleteCategory );
 
 
 // Get All Menu
-router.post("/all/:tenant_id", GetAllMenu );
+router.get("/all/:tenant_id", GetAllMenu );
 
 // Get Menu
 router.get("/:tenant_id/:menu_id", GetMenu );

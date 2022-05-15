@@ -202,7 +202,13 @@ async function Register(req, res) {
 			return tempId;
 		}
 
+
+
   TenantID = "T-" + tempId;
+
+      //Create QrCode link
+      const link = "http://localhost:3000/" + TenantID
+
   if (
     name == "" ||
     email == "" ||
@@ -255,6 +261,7 @@ async function Register(req, res) {
                 email,
                 password: hashedPassword,
                 verified: false,
+                qrCode: link,
                 openingDays: [{
                   day       : "Monday",
                   is24Hours : false,
