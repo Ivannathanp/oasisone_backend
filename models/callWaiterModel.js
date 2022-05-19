@@ -20,14 +20,14 @@ const callWaiterSchema = mongoose.Schema(
           type: String,
           required: false,
         },
-        table: {
+        table_id: {
           type: String,
           required: true,
         },
-		numberOfGuess: {
-			type: Number,
-			required: true,
-		}
+        numberOfGuess: {
+          type: Number,
+          required: true,
+        },
       },
     ],
   },

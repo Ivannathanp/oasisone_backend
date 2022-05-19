@@ -182,10 +182,14 @@ async function CreateOrder(req, res) {
         
               }
 
+              const RetrieveLatestOrder = await Order.find({
+                 tenant_id: tenant_id })
+
+
               return res.status(200).json({
                 status: "SUCCESS",
                 message: "Order has been placed",
-                data: newOrder,
+                data: RetrieveLatestOrder,
               });
             }
           } else {
@@ -219,6 +223,7 @@ async function TenantRetrieveOrder(req, res) {
     const checkOrder = await Order.aggregate([
       { $match: { tenant_id: tenant_id } },
       { $sort   : { "order_time" : -1 } },
+     
  
     ]);
 
@@ -282,7 +287,7 @@ async function TableRetrieveOrder(req, res) {
 // Edit Order Status
 async function TenantEditStatus(req, res) {
   try {
-    const { order_id } = req.params;
+    const { tenant_id,order_id } = req.params;
     const { order_status, order_table } = req.body;
 
     const checkOrder = await Order.findOne({
@@ -355,7 +360,7 @@ async function TenantEditStatus(req, res) {
 // Reject Order
 async function TenantRejectOrder(req, res) {
   try {
-    const { order_id } = req.params;
+    const { tenant_id,order_id } = req.params;
     const { order_status, reject_reason } = req.body;
 
     const checkOrder = await Order.findOne({

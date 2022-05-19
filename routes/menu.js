@@ -23,7 +23,7 @@ router.post("/category/edit/:tenant_id", EditCategory );
 router.post("/category/edit/index/:tenant_id", EditCategoryIndex );
 
 // Delete Category
-router.post("/category/delete/:cat_id", DeleteCategory );
+router.post("/category/delete/:tenant_id/:cat_id", DeleteCategory );
 
 
 // Get All Menu
@@ -39,6 +39,6 @@ router.post("/create/:tenant_id", CreateMenu );
 router.post("/edit/:tenant_id", EditMenu );
 
 // Delete Menu
-router.post("/delete/:menu_id", DeleteMenu );
+router.post("/delete/:tenant_id/:menu_id", DeleteMenu );
 
 export default router; 

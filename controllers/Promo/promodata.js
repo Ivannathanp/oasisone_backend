@@ -52,7 +52,7 @@ async function CreatePromotions(req, res) {
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Promotions has been added",
-                    data    : RetrieveLatestPromo,
+                    data    : RetrieveLatestPromo.promotions,
                 })
             } else {
                 return res.status(404).json({
@@ -70,6 +70,7 @@ async function CreatePromotions(req, res) {
                     startingPeriod  : promo_start,
                     endingPeriod    : promo_end,
                     details         : promo_details,
+                    promoImage      : promo_image,
                 }]
             })
             await newPromobanner.save();
@@ -111,7 +112,7 @@ async function RetrievePromotions(req, res) {
             return res.status(200).json({
                 status  : "SUCCESS",
                 message : "Promo has been retrieved",
-                data    : checkPromo
+                data    : checkPromo.promotions
             })
         } else {
             return res.status(404).json({
@@ -133,7 +134,7 @@ async function RetrievePromotions(req, res) {
 async function EditPromotions(req, res) {
     try {
         const { promo_id } = req.params;
-        const { promo_name, promo_start, promo_end, promo_details } = req.body;
+        const { promo_name, promo_start, promo_end, promo_details, promo_image } = req.body;
 
         const checkPromo = await Promobanner.findOne({
             "promotions.id" : promo_id
@@ -149,6 +150,7 @@ async function EditPromotions(req, res) {
                         "promotions.$.startingPeriod" : promo_start,
                         "promotions.$.endingPeriod" : promo_end,
                         "promotions.$.details" : promo_details,
+                        "promotions.$.promoImage": promo_image
                     }
             })
 
@@ -160,7 +162,7 @@ async function EditPromotions(req, res) {
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Promo has been updated",
-                    data    : checkAfterUpdate
+                    data    : checkAfterUpdate.promotions
                 })
             }
  
@@ -183,7 +185,7 @@ async function EditPromotions(req, res) {
 // Delete Promotions
 async function DeletePromotions(req, res) {
     try {
-        const { promo_id } = req.params;
+        const { tenant_id,promo_id } = req.params;
 
         const checkPromo = await Promobanner.findOne({
             "promotions.id" : promo_id
@@ -200,9 +202,15 @@ async function DeletePromotions(req, res) {
             })
 
             if ( deletePromo ) {
+                
+                const existingPromo = await Promobanner.findOne({
+                    tenant_id: tenant_id
+                })
+        
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Promo has been deleted",
+                    data: existingPromo.promotions
                 })
             }
  

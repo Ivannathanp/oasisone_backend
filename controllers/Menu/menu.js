@@ -25,7 +25,7 @@ async function CreateCategories(req, res) {
       tenant_id: tenant_id,
     });
 
-    if (existingTenant) {
+    if (!existingTenant) {
       const newMenu = new Menu({
         tenant_id: tenant_id,
         category: [
@@ -39,10 +39,23 @@ async function CreateCategories(req, res) {
       await newMenu.save();
 
       if (newMenu) {
+
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
+
         return res.status(200).json({
           status: "SUCCESS",
           message: "New category has been created",
-          data: newMenu,
+          data: RetrieveLatestMenu,
         });
       } else {
         return res.status(404).json({
@@ -56,20 +69,22 @@ async function CreateCategories(req, res) {
       $and: [{ tenant_id: tenant_id }, { "category.name": { $ne: cat_name } }],
     });
 
-    const amount = await Menu.aggregate([{
-      $project: {
-        _id   : 0,
-        count : { $size: "$category"}
-      }
-    }]);
+    const amount = await Menu.aggregate([
+      {
+        $project: {
+          _id: 0,
+          count: { $size: "$category" },
+        },
+      },
+    ]);
 
     if (existingTenant && notExistingMenu) {
-      for ( let j = 1; j <= amount[0].count; j++ ) {
+      for (let j = 1; j <= amount[0].count; j++) {
         let notExistingIndex = await Menu.findOne({
           $and: [{ tenant_id: tenant_id }, { "category.index": { $ne: j } }],
         });
 
-        while ( notExistingIndex != null ) {
+        while (notExistingIndex != null) {
           await Menu.updateOne(
             {
               tenant_id: tenant_id,
@@ -85,10 +100,18 @@ async function CreateCategories(req, res) {
             }
           );
 
-          const RetrieveLatestMenu = await Menu.findOne({
-            tenant_id: tenant_id,
-          });
-    
+          const RetrieveLatestMenu = await Menu.aggregate([
+            { $match: { tenant_id: tenant_id } },
+            { $unwind: "$category" },
+            { $sort: { "category.index": 1 } },
+            {
+              $project: {
+                _id: 0,
+                category: 1,
+              },
+            },
+          ]);
+
           if (RetrieveLatestMenu) {
             return res.status(200).json({
               status: "SUCCESS",
@@ -103,7 +126,7 @@ async function CreateCategories(req, res) {
           }
         }
 
-        if ( j == amount[0].count ) { 
+        if (j == amount[0].count) {
           await Menu.updateOne(
             {
               tenant_id: tenant_id,
@@ -119,10 +142,18 @@ async function CreateCategories(req, res) {
             }
           );
 
-          const RetrieveLatestMenu = await Menu.findOne({
-            tenant_id: tenant_id,
-          });
-    
+          const RetrieveLatestMenu = await Menu.aggregate([
+            { $match: { tenant_id: tenant_id } },
+            { $unwind: "$category" },
+            { $sort: { "category.index": 1 } },
+            {
+              $project: {
+                _id: 0,
+                category: 1,
+              },
+            },
+          ]);
+
           if (RetrieveLatestMenu) {
             return res.status(200).json({
               status: "SUCCESS",
@@ -137,7 +168,6 @@ async function CreateCategories(req, res) {
           }
         }
       }
-      
     } else {
       return res.status(404).json({
         status: "FAILED",
@@ -159,22 +189,34 @@ async function GetCategory(req, res) {
     const { tenant_id } = req.params;
 
     const checkCategory = await Menu.aggregate([
-      { $match  : { tenant_id: tenant_id } },
-      { $unwind : '$category' },
-      { $sort   : { "category.index" : 1 } },
-      { $project: { 
+      { $match: { tenant_id: tenant_id } },
+      { $unwind: "$category" },
+      { $sort: { "category.index": 1 } },
+      {
+        $project: {
           _id: 0,
-          "category": 1,
-        } 
-      }
-    ])
-
+          category: 1,
+        },
+      },
+    ]);
 
     if (checkCategory) {
+      const RetrieveLatestMenu = await Menu.aggregate([
+        { $match: { tenant_id: tenant_id } },
+        { $unwind: "$category" },
+        { $sort: { "category.index": 1 } },
+        {
+          $project: {
+            _id: 0,
+            category: 1,
+          },
+        },
+      ]);
+
       return res.status(200).json({
         status: "SUCCESS",
         message: "Category has been retrieved",
-        data: checkCategory,
+        data: RetrieveLatestMenu,
       });
     } else {
       return res.status(404).json({
@@ -201,7 +243,7 @@ async function EditCategory(req, res) {
       $and: [
         { tenant_id: tenant_id },
         { "category.id": cat_id },
-        { "category.name": { $ne: cat_name } }
+        { "category.name": { $ne: cat_name } },
       ],
     });
 
@@ -218,14 +260,23 @@ async function EditCategory(req, res) {
       );
 
       if (updateMenu) {
-        const checkAfterUpdate = await Menu.findOne({
-          "category.id": cat_id,
-        });
+
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
 
         return res.status(200).json({
           status: "SUCCESS",
           message: "Category has been updated",
-          data: checkAfterUpdate,
+          data: RetrieveLatestMenu,
         });
       } else {
         return res.status(404).json({
@@ -255,39 +306,44 @@ async function EditCategoryIndex(req, res) {
     const { cat_id, cat_index } = req.body;
 
     const existingMenu = await Menu.findOne({
-      $and: [
-        { tenant_id: tenant_id },
-        { "category.id": cat_id },
-      ],
+      $and: [{ tenant_id: tenant_id }, { "category.id": cat_id }],
     });
 
-    if ( existingMenu ) {
-      await Menu.updateOne({
+    if (existingMenu) {
+      await Menu.updateOne(
+        {
           "category.id": cat_id,
-        }, {
+        },
+        {
           $set: {
             "category.$.index": cat_index,
           },
         }
       );
 
-      const checkAfterUpdate = await Menu.findOne({
-        "category.id": cat_id,
-      });
+      const RetrieveLatestMenu = await Menu.aggregate([
+        { $match: { tenant_id: tenant_id } },
+        { $unwind: "$category" },
+        { $sort: { "category.index": 1 } },
+        {
+          $project: {
+            _id: 0,
+            category: 1,
+          },
+        },
+      ]);
 
       return res.status(200).json({
         status: "SUCCESS",
         message: "Category has been updated",
-        data: checkAfterUpdate,
+        data: RetrieveLatestMenu,
       });
-      
     } else {
       return res.status(404).json({
         status: "FAILED",
         message: "Category name has been used",
       });
     }
-
   } catch (error) {
     console.log(error);
     res.status(500).json({
@@ -300,42 +356,56 @@ async function EditCategoryIndex(req, res) {
 // Delete Category
 async function DeleteCategory(req, res) {
   try {
-      const { cat_id } = req.params;
+    const { tenant_id, cat_id } = req.params;
 
-      const checkCategory = await Menu.findOne({
-          "category.id" : cat_id
-      })
-      
-      if ( checkCategory ) {
-          const deleteCategory = await Menu.updateOne({
-            "category.id" : cat_id
-          }, {
-            $pull: 
-              {
-                "category" : { id: cat_id },
-              }
-          })
+    const checkCategory = await Menu.findOne({
+      "category.id": cat_id,
+    });
 
-          if ( deleteCategory ) {
-              return res.status(200).json({
-                  status  : "SUCCESS",
-                  message : "Category has been deleted",
-              })
-          }
+    if (checkCategory) {
+      const deleteCategory = await Menu.updateOne(
+        {
+          "category.id": cat_id,
+        },
+        {
+          $pull: {
+            category: { id: cat_id },
+          },
+        }
+      );
 
-      } else {
-          return res.status(404).json({
-              status  : "FAILED",
-              message : "Category has not been deleted"
-          })
+      if (deleteCategory) {
+
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
+
+        return res.status(200).json({
+          status: "SUCCESS",
+          message: "Category has been deleted",
+          data: RetrieveLatestMenu,
+        });
       }
-
-  } catch (error) {
-      console.log(error);
-      res.status(500).json({ 
-        status  : "FAILED",
-        message : error.message 
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Category has not been deleted",
       });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
   }
 }
 
@@ -386,7 +456,7 @@ async function CreateMenu(req, res) {
             "category.$.menu": {
               id: menu_id,
               name: menu_name,
-              menuImage : menu_image,
+              menuImage: menu_image,
               duration: menu_duration,
               description: menu_desc,
               isRecommended: menu_isRecommended,
@@ -398,10 +468,19 @@ async function CreateMenu(req, res) {
         }
       );
 
-      if ( UpdateMenu ) {
-        const RetrieveLatestMenu = await Menu.findOne({
-          "category.id": cat_id,
-        });
+      if (UpdateMenu) {
+
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
 
         if (RetrieveLatestMenu) {
           return res.status(200).json({
@@ -436,41 +515,34 @@ async function GetAllMenu(req, res) {
   try {
     const { tenant_id } = req.params;
 
-    const checkMenu = await Menu.findOne(
-     { tenant_id: tenant_id }
-    
-    );
+    const checkMenu = await Menu.findOne({ tenant_id: tenant_id });
 
     if (checkMenu) {
-
       const combineMenu = await Menu.aggregate([
         {
-          $unwind: "$category"
-        },       
-        { $unwind: '$category.menu' },
+          $unwind: "$category",
+        },
+        { $unwind: "$category.menu" },
         {
           $sort: {
-"category.menu.quantity" : -1,
-          }
+            "category.menu.quantity": -1,
+          },
         },
         {
           $group: {
             _id: "",
-            "menu": {
-              $push: "$category.menu"
-            
+            menu: {
+              $push: "$category.menu",
             },
-          }
+          },
         },
-        
-       
+
         {
           $project: {
-            _id: 0
-          }
-        } 
-      ])
-
+            _id: 0,
+          },
+        },
+      ]);
 
       return res.status(200).json({
         status: "SUCCESS",
@@ -498,22 +570,24 @@ async function GetMenu(req, res) {
     const { tenant_id, menu_id } = req.params;
 
     const checkMenu = await Menu.aggregate([
-      { $match: { tenant_id: tenant_id } }, 
+      { $match: { tenant_id: tenant_id } },
       { $unwind: "$category" },
-      { $unwind: '$category.menu' },
-      { $match: { "category.menu.id": menu_id } }, 
-      { $project: {
-        _id       : 0,
-        tenant_id : 0,
-        category  : {
-          _id   : 0,
-          id    : 0,
-          index : 0,
-          name  : 0,
-        }
-      } }
-    ])
-    
+      { $unwind: "$category.menu" },
+      { $match: { "category.menu.id": menu_id } },
+      {
+        $project: {
+          _id: 0,
+          tenant_id: 0,
+          category: {
+            _id: 0,
+            id: 0,
+            index: 0,
+            name: 0,
+          },
+        },
+      },
+    ]);
+
     if (checkMenu) {
       return res.status(200).json({
         status: "SUCCESS",
@@ -552,23 +626,79 @@ async function EditMenu(req, res) {
       menu_isAvailable,
     } = req.body;
 
-    const checkMenu = await Menu.findOne({
-      $and: [
-        { tenant_id: tenant_id },
-        { "category.id": cat_id },
-        { "category.menu.id": menu_id },
-        { "category.menu.name": { $ne: menu_name } },
-      ],
-    });
-    
+    const checkMenu = await Menu.findOne(
+    {
+      $or: [
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $ne: menu_name } },
+          ],
+        },
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $eq: menu_name } },
+            { "category.menu.menuImage": { $eq: menu_image } },
+           
+          ],
+        },
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $eq: menu_name } },
+            { "category.menu.duration": { $ne: menu_duration } },
+            
+ 
+          ],
+        },
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $eq: menu_name } },
+            { "category.menu.price": { $ne: menu_price } },
+            
+ 
+          ],
+        },
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $eq: menu_name } },
+            { "category.menu.description": { $ne: menu_desc } },
+            
+ 
+          ],
+        },
+        {
+          $and: [
+            { tenant_id: tenant_id },
+            { "category.id": cat_id },
+            { "category.menu.id": menu_id },
+            { "category.menu.name": { $eq: menu_name } },
+            { "category.menu.isRecommended": { $ne: menu_isRecommended } },
+            
+ 
+          ],
+        }
+      ]
+    }
+    );
 
     if (checkMenu) {
       const UpdateMenu = await Menu.updateOne(
         {
-          $and: [
-            { "category.id": cat_id }, 
-            { "category.menu.id": menu_id }
-          ],
+          $and: [{ "category.id": cat_id }, { "category.menu.id": menu_id }],
         },
         {
           $set: {
@@ -587,13 +717,22 @@ async function EditMenu(req, res) {
         }
       );
 
-
       if (UpdateMenu) {
-        const RetrieveLatestMenu = await Menu.findOne({
-          "category.id": cat_id,
-        });
+
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
 
         if (RetrieveLatestMenu) {
+
           return res.status(200).json({
             status: "SUCCESS",
             message: "Menu has been retrieved",
@@ -630,42 +769,56 @@ async function EditMenu(req, res) {
 // Delete Menu
 async function DeleteMenu(req, res) {
   try {
-      const { menu_id } = req.params;
+    const { tenant_id, menu_id } = req.params;
 
-      const checkMenu = await Menu.findOne({
-          "category.$.menu.id" : menu_id
-      })
+    const checkMenu = await Menu.findOne({
+      "category.$.menu.id": menu_id,
+    });
 
-      if ( checkMenu ) {
-          const deleteMenu = await Menu.updateOne({
-              "category.menu.id" : menu_id
-          }, {
-              $pull: 
-              {
-                  "category.$.menu" : { id: menu_id },
-              }
-          })
+    if (checkMenu) {
+      const deleteMenu = await Menu.updateOne(
+        {
+          "category.menu.id": menu_id,
+        },
+        {
+          $pull: {
+            "category.$.menu": { id: menu_id },
+          },
+        }
+      );
 
-          if ( deleteMenu ) {
-              return res.status(200).json({
-                  status  : "SUCCESS",
-                  message : "Menu has been deleted",
-              })
-          }
+      if (deleteMenu) {
 
-      } else {
-          return res.status(404).json({
-              status  : "FAILED",
-              message : "Menu has not been deleted"
-          })
+        const RetrieveLatestMenu = await Menu.aggregate([
+          { $match: { tenant_id: tenant_id } },
+          { $unwind: "$category" },
+          { $sort: { "category.index": 1 } },
+          {
+            $project: {
+              _id: 0,
+              category: 1,
+            },
+          },
+        ]);
+
+        return res.status(200).json({
+          status: "SUCCESS",
+          message: "Menu has been deleted",
+          data:RetrieveLatestMenu
+        });
       }
-
-  } catch (error) {
-      console.log(error);
-      res.status(500).json({ 
-        status  : "FAILED",
-        message : error.message 
+    } else {
+      return res.status(404).json({
+        status: "FAILED",
+        message: "Menu has not been deleted",
       });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      status: "FAILED",
+      message: error.message,
+    });
   }
 }
 

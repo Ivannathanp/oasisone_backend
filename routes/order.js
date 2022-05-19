@@ -16,9 +16,9 @@ router.get("/retrieve/:tenant_id", TenantRetrieveOrder );
 router.post("/table/retrieve/:tenant_id", TableRetrieveOrder );
 
 // Edit
-router.post("/edit/:order_id", TenantEditStatus );
+router.post("/edit/:tenant_id/:order_id", TenantEditStatus );
 
 // Reject
-router.post("/reject/:order_id", TenantRejectOrder );
+router.post("/reject/:tenant_id/:order_id", TenantRejectOrder );
 
 export default router;

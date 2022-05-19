@@ -73,10 +73,23 @@ io.on('connection', (socket) => {
 
   
   socket.on('add table', data => socket.broadcast.emit('add table', data));
+  socket.on('delete table', data => socket.broadcast.emit('delete table', data));
+  socket.on('remove table', data => socket.broadcast.emit('remove table', data));
+  socket.on('duplicate table', data => socket.broadcast.emit('duplicate table', data));
+  
   socket.on('update user', data => socket.broadcast.emit('update user', data));
-  socket.on('delete', data => socket.broadcast.emit('delete', data));
+
+  socket.on('add promo', data => socket.broadcast.emit('add promo', data));
+  socket.on('update promo', data => socket.broadcast.emit('update promo', data));
+  socket.on('delete promo', data => socket.broadcast.emit('delete promo', data));
+
+  socket.on('add category', data => socket.broadcast.emit('add category', data));
+  socket.on('update category', data => socket.broadcast.emit('update category', data));
+  socket.on('delete category', data => socket.broadcast.emit('delete category', data));
 
 
+  socket.on('add order', data => socket.broadcast.emit('add order', data));
+  socket.on('update order', data => socket.broadcast.emit('update order', data));
 
   socket.on('disconnect', () => {
     online--;

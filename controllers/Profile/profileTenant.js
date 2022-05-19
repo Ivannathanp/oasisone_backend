@@ -187,10 +187,12 @@ async function EditOpeningHours(req, res) {
       checkTenant.openingDays[index].CloseTF = CloseTF;
       await checkTenant.save();
 
+      const retrieveLatestTenant = await Tenant.findOne({ tenant_id });
+
       return res.status(200).json({
         status: "SUCCESS",
         message: "Service charges has been changed",
-        data: checkTenant,
+        data: retrieveLatestTenant,
       });
     }
 

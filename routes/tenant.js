@@ -47,7 +47,7 @@ router.post("/edit/servicecharges", EditServiceCharge);
 router.post("/edit/:tenant_id", EditProfile);
 
 // Change Opening Hours
-router.post("/edit/openinghours", EditOpeningHours);
+router.post("/edit/openinghours/:tenant_id", EditOpeningHours);
 
 // // Verified page route
 // router.get("/verified", (req, res) => {

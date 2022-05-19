@@ -2,13 +2,11 @@ import express from "express";
 import getRandomString from "randomstring";
 const router = express.Router();
 
-//mongodb tenant model
+//mongodb model
 import Management from "../models/managementModel.js";
+import Tenant from "../models/tenantModel.js";
 
-//unique string
-import { v4 as uuidv4 } from "uuid";
 
-//env variables
 import "dotenv/config";
 
 //password handler
@@ -80,107 +78,7 @@ router.post("/signin", (req, res) => {
   }
 });
 
-router.post("/signup", (req, res) => {
-    let { name, email, password } = req.body;
-    let ManagementID;
-    let tempId = getRandomString.generate(8);
-  
-    const existingId = Management.findOne({ management_id: "M-" + tempId });
-    if (existingId === "M-" + tempId) {
-      tempId = new getRandomString.generate(8);
-      return tempId;
-    }
-  
-    ManagementID = "M-" + tempId;
-  
-    if (
-      name == "" ||
-      email == "" ||
-      password == ""
-    ) {
-      res.json({
-        status: "FAILED",
-        message: "Empty input fields!",
-      });
-    } else if (!/^[a-zA-Z]*$/.test(name)) {
-      res.json({
-        status: "FAILED",
-        message: " Invalid name entered",
-      });
-    } else if (!/^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(email)) {
-      res.json({
-        status: "FAILED",
-        message: " Invalid email entered",
-      });
-  
-    } else if (password.length < 8) {
-      res.json({
-        status: "FAILED",
-        message: " Password is too short",
-      });
-    
-    } else {
-      //checking if user already exists
-      Management.find({ email })
-        .then((result) => {
-          if (result.length) {
-            //A user already exists
-            res.json({
-              status: "FAILED",
-              message: "User with the provided email already exists",
-            });
-          } else {
-            //Try to create a new user
-  
-            //Password handler
-            const saltRounds = 10;
-            bcrypt
-              .hash(password, saltRounds)
-              .then((hashedPassword) => {
-                const newManagement = new Management({
-                  management_id: ManagementID,
-                  name,
-                  email,
-                  password: hashedPassword,
-                });
-  
-                newManagement
-                  .save()
-                  .then((result) => {
-                       res.json({
-                    status: "SUCCESS",
-                    message: "Signup sucessfull",
-                    data: result,
-                  });
-                  })
-                  .catch((err) => {
-                    console.log(err);
-                    res.json({
-                      status: "FAILED",
-                      message: "An error occured while saving password!",
-                    });
-                  });
-              })
-              .catch((err) => {
-                console.log(err);
-                res.json({
-                  status: "FAILED",
-                  message: "An error occured while hashing password!",
-                });
-              });
-          }
-        })
-        .catch((err) => {
-          console.log(err);
-          res.json({
-            status: "FAILED",
-            message: "An error occured while checking for existing user!",
-          });
-        });
-    }
-
-
-  });
+// Get All Tenant Data
 
   router.get("/user", (req, res) => {
 
@@ -190,4 +88,22 @@ router.post("/signup", (req, res) => {
       })
     });
 
+    // Search Tenant by Name
+
+    // Filter Tenant by Alphabet (Name)
+
+    // Filter Tenant by Location (Alphabet jalanan)
+
+    // Filter Tenant by Status (open -> close)
+
+    // Tenant Edit Profile (Take from tenant)
+
+    // Tenant Contract File Upload
+
+    // Search Customer by Name
+
+    // Filter Customer by Alphabet (Name)
+
+    // Filter Customer by Location (Last tenant Name)
+    
 export default router;

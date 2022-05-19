@@ -1,4 +1,5 @@
 import Table from "../../models/tableModel.js";
+import CallWaiter from "../../models/callWaiterModel.js";
 
 // Create Table
 async function CreateTables(req, res) {
@@ -36,10 +37,22 @@ async function CreateTables(req, res) {
         await newTable.save();
   
         if (newTable) {
+
+          const RetrieveLatestTable = await Table.aggregate([
+            { $match  : { tenant_id: tenant_id } },
+            { $unwind : '$table' },
+            { $sort   : { "table.index" : 1 } },
+            { $project: { 
+                _id: 0,
+                "table": 1,
+              } 
+            }
+          ])
+
           return res.status(200).json({
             status: "SUCCESS",
             message: "New Table has been created",
-            data: newTable,
+            data: RetrieveLatestTable,
           });
         } else {
           return res.status(404).json({
@@ -78,15 +91,22 @@ async function CreateTables(req, res) {
             },
           }
         );
-        const RetrieveLatestTable = await Table.findOne({
-          tenant_id: tenant_id,
-        });
+        const RetrieveLatestTable = await Table.aggregate([
+          { $match  : { tenant_id: tenant_id } },
+          { $unwind : '$table' },
+          { $sort   : { "table.index" : 1 } },
+          { $project: { 
+              _id: 0,
+              "table": 1,
+            } 
+          }
+        ])
   
         if (RetrieveLatestTable) {
           return res.status(200).json({
             status: "SUCCESS",
             message: "Table has been created",
-            data: RetrieveLatestTable.table,
+            data: RetrieveLatestTable,
           });
         } else {
           return res.status(404).json({
@@ -111,15 +131,23 @@ async function CreateTables(req, res) {
               }
             );
   
-            const RetrieveLatestTable = await Table.findOne({
-              tenant_id: tenant_id,
-            });
+          
+            const RetrieveLatestTable = await Table.aggregate([
+          { $match  : { tenant_id: tenant_id } },
+          { $unwind : '$table' },
+          { $sort   : { "table.index" : 1 } },
+          { $project: { 
+              _id: 0,
+              "table": 1,
+            } 
+          }
+        ])
       
             if (RetrieveLatestTable) {
               return res.status(200).json({
                 status: "SUCCESS",
                 message: "Table has been retrieved",
-                data: RetrieveLatestTable.table,
+                data: RetrieveLatestTable,
               });
             } else {
               return res.status(404).json({
@@ -239,14 +267,21 @@ async function DuplicateTables ( req, res ) {
                 }
             );
 
-            const checkAfterUpdate = await Table.findOne({
-                "Table.id": or_table,
-            });
+            const RetrieveLatestTable = await Table.aggregate([
+              { $match  : { tenant_id: tenant_id } },
+              { $unwind : '$table' },
+              { $sort   : { "table.index" : 1 } },
+              { $project: { 
+                  _id: 0,
+                  "table": 1,
+                } 
+              }
+            ])
 
             return res.status(200).json({
                 status: "SUCCESS",
                 message: "Table has been updated",
-                data: checkAfterUpdate,
+                data: RetrieveLatestTable,
             });
 
         } else {
@@ -290,9 +325,32 @@ async function RemoveTableContent(req, res) {
             })
 
             if ( deleteTable ) {
+
+              await CallWaiter.updateOne({
+                "tenant_id" : tenant_id
+            }, {
+                $pull: 
+                    {
+                        "waiter" : { table_id: table_id },
+                    }
+            })
+
+
+              const RetrieveLatestTable = await Table.aggregate([
+                { $match  : { tenant_id: tenant_id } },
+                { $unwind : '$table' },
+                { $sort   : { "table.index" : 1 } },
+                { $project: { 
+                    _id: 0,
+                    "table": 1,
+                  } 
+                }
+              ])
+
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Table content has been deleted",
+                    data: RetrieveLatestTable
                 })
             }
  
@@ -333,9 +391,22 @@ async function RemoveTable(req, res) {
             })
 
             if ( deleteTable ) {
+
+              const RetrieveLatestTable = await Table.aggregate([
+                { $match  : { tenant_id: tenant_id } },
+                { $unwind : '$table' },
+                { $sort   : { "table.index" : 1 } },
+                { $project: { 
+                    _id: 0,
+                    "table": 1,
+                  } 
+                }
+              ])
+
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Table has been deleted",
+                    data: RetrieveLatestTable
                 })
             }
  
