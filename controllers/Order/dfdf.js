@@ -9,7 +9,6 @@ import getRandomString from "randomstring";
 async function CreateOrder(req, res) {
   try {
     const {
-      // user_id,
       order_table,
       order_menu,
       order_item,
@@ -24,29 +23,26 @@ async function CreateOrder(req, res) {
 
     const { tenant_id } = req.params;
 
-    let order_id, order_status, order_time;
-    // if (user_id == null){
-  
-    //   let tempUserId = getRandomString.generate(8);
-  
-    //   const existingUserId = await User.findOne({ user_id: "U-" + tempUserId });
-  
-    //   if (existingUserId === "U-" + tempUserId) {
-    //     tempUserId = new getRandomString.generate(8);
-    //     return tempUserId;
-    //   }
-    //   user_id = "U-" + tempUserId;
-    // }     
-
+    let user_id, order_id, order_status, order_time;
     const generateID = () => Math.floor(Math.random() * 99999999);
     let tempId = generateID();
-    const existingId = await Order.findOne({ order_id: "ODR - " + tempId });
-    
+
+    let tempUserId = getRandomString.generate(8);
+
+    const existingUserId = await User.findOne({ user_id: "U-" + tempUserId });
+
+    if (existingUserId === "U-" + tempUserId) {
+      tempUserId = new getRandomString.generate(8);
+      return tempUserId;
+    }
+    user_id = "U-" + tempUserId;
+
+    const existingId = await Order.findOne({ order_id: "ODR-" + tempId });
     if (existingId) {
       tempId = new generateID();
       return tempId;
     }
-    order_id = "ODR - " + tempId;
+    order_id = "ODR-" + tempId;
 
     if (order_id != undefined) {
       let orderList = [];
@@ -179,7 +175,7 @@ async function CreateOrder(req, res) {
 
         if (newOrderList.length == order_menu.length) {
           const newOrder = new Order({
-            // user_id: user_id,
+            user_id: user_id,
             tenant_id: tenant_id,
             order_id: order_id,
             order_table: order_table,

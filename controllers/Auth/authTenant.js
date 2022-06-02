@@ -189,7 +189,7 @@ function sendResetEmail({ _id, email }, redirectUrl, res) {
 }
 
 
-// Functions
+// Signup Functions
 async function Register(req, res) {
 	try {
 		const { name, email, password, confirmPassword } = req.body;
@@ -201,8 +201,6 @@ async function Register(req, res) {
 			tempId = new getRandomString.generate(8);
 			return tempId;
 		}
-
-
 
   TenantID = "T-" + tempId;
 
@@ -247,9 +245,7 @@ async function Register(req, res) {
           });
         } else {
           //Try to create a new user
-
           
-
           //Password handler
           const saltRounds = 10;
           bcrypt

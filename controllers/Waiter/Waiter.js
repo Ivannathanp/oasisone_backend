@@ -5,7 +5,7 @@ import Table from "../../models/tableModel.js";
 async function WaiterCalled(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { name, phoneNumber, instruction, table_id, numberOfGuess } =
+    const { user_name, user_phonenumber, order_instruction, order_table, user_guest } =
       req.body;
 
     const existingTenant = await CallWaiter.findOne({
@@ -17,11 +17,11 @@ async function WaiterCalled(req, res) {
         tenant_id: tenant_id,
         waiter: [
           {
-            name: name,
-            phoneNumber: phoneNumber,
-            instruction: instruction,
-            table_id: table_id,
-            numberOfGuess: numberOfGuess,
+            user_name: user_name,
+            user_phonenumber: user_phonenumber,
+            order_instruction: order_instruction,
+            order_table: order_table,
+            user_guest: user_guest,
           },
         ],
       });
@@ -34,11 +34,11 @@ async function WaiterCalled(req, res) {
         {
           $push: {
             waiter: {
-              name: name,
-              phoneNumber: phoneNumber,
-              instruction: instruction,
-              table_id: table_id,
-              numberOfGuess: numberOfGuess,
+              user_name: user_name,
+              user_phonenumber: user_phonenumber,
+              order_instruction: order_instruction,
+              order_table: order_table,
+              user_guest: user_guest,
             },
           },
         }
@@ -50,20 +50,21 @@ async function WaiterCalled(req, res) {
       {
         tenant_id: tenant_id,
       },
-      { table: { $elemMatch: { id: table_id } } }
+      { table: { $elemMatch: { index: order_table } } }
     );
 
+    console.log(checkTable)
     if (checkTable) {
       await Table.updateOne(
         {
-          "table.id": table_id,
+          "table.index": order_table,
         },
         {
           $set: {
             "table.$.status": "FILLED",
 
             "table.$.isWaiterCalled": true,
-            "table.$.customerCount": numberOfGuess,
+            "table.$.customerCount": user_guest,
           },
         }
       );
@@ -104,7 +105,7 @@ async function WaiterCalled(req, res) {
 async function RetrieveWaiter(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { table_id } = req.body;
+    const { order_table } = req.body;
 
     const existingTenant = await CallWaiter.findOne({
       tenant_id: tenant_id,
@@ -114,7 +115,7 @@ async function RetrieveWaiter(req, res) {
       const RetrieveLatestWaiterCall = await CallWaiter.aggregate([
         { $match: { tenant_id: tenant_id } },
         { $unwind: "$waiter" },
-        { $match: { "waiter.table_id": table_id } },
+        { $match: { "waiter.order_table": order_table } },
         {
           $project: {
             _id: 0,
@@ -123,7 +124,7 @@ async function RetrieveWaiter(req, res) {
         },
       ]);
 
-      console.log(table_id);
+      console.log(order_table);
 
       return res.status(200).json({
         status: "SUCCESS",
@@ -149,13 +150,13 @@ async function RetrieveWaiter(req, res) {
 async function RemoveWaiterCall(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { table_id } = req.body;
+    const { order_table } = req.body;
 
     const existingTenant = await CallWaiter.findOne(
       {
         tenant_id: tenant_id,
       },
-      { waiter: { $elemMatch: { table_id: table_id } } }
+      { waiter: { $elemMatch: { order_table: order_table } } }
     );
 
     if (existingTenant) {
@@ -165,7 +166,7 @@ async function RemoveWaiterCall(req, res) {
         },
         {
           $pull: {
-            waiter: { table_id: table_id },
+            waiter: { order_table: order_table },
           },
         }
       );
@@ -175,13 +176,13 @@ async function RemoveWaiterCall(req, res) {
         {
           tenant_id: tenant_id,
         },
-        { table: { $elemMatch: { id: table_id } } }
+        { table: { $elemMatch: { index: order_table } } }
       );
 
       if (checkTable) {
         const updateTable = await Table.updateOne(
           {
-            "table.id": table_id,
+            "table.index": order_table,
           },
           {
             $set: {

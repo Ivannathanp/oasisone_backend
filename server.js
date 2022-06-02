@@ -4,6 +4,12 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import {
+  userJoin,
+  getCurrentUser,
+  userLeave,
+  getRoomUsers,
+} from "./utils/users.js";
 
 // Models
 import Tenant from "./models/tenantModel.js";
@@ -23,13 +29,13 @@ import contract from "./routes/contract.js";
 dotenv.config();
 
 const app = express();
-const httpServer  = createServer(app);
+const httpServer = createServer(app);
 const io = new Server(httpServer, {
   cors: {
     origin: "*",
     methods: ["GET", "POST"],
     credentials: false,
-  }
+  },
 });
 
 const port = process.env.PORT || 5000;
@@ -44,62 +50,273 @@ app.use(
 app.use(express.json());
 
 const uri = process.env.MONGODB_URI;
-mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 const connection = mongoose.connection;
 connection.once("open", () => {
   console.log("Connected successfully");
 });
 
-app.use('/api/management', management);
-app.use('/api/tenant', tenant);
-app.use('/api/user', user);
-app.use('/api/order', order);
-app.use('/api/promo', promo);
-app.use('/api/menu', menu);
-app.use('/api/table', table); 
-app.use('/api/waiter', waiter);
-app.use('/api/images', images);
-app.use('/api/contract', contract); 
+app.use("/api/management", management);
+app.use("/api/tenant", tenant);
+app.use("/api/user", user);
+app.use("/api/order", order);
+app.use("/api/promo", promo);
+app.use("/api/menu", menu);
+app.use("/api/table", table);
+app.use("/api/waiter", waiter);
+app.use("/api/images", images);
+app.use("/api/contract", contract);
+
+// Set static folder
+// app.use(express.static(path.join(__dirname, 'public')));
+
+// Contains objects of connections
+var connections = {};
 
 let online = 0;
 
-io.on('connection', (socket) => {
+// io.on("connection", (socket) => {
+//   online++;
+//   const tenantID = socket.handshake.query.tenant_id;
+//   console.log(tenantID + " client is connected with " + socket.id);
+//   console.log(`Online: ${online}`);
+//   io.emit("visitor enters", online);
+
+// if (connections[tenant_id]) {
+//   connections[tenant_id].disconnect(true);
+// }
+
+//     connections[tenantID] = socket.id;
+//     socket.broadcast.emit('user.status', tenantID, socket.id);
+//     console.log("socket id:",tenantID + "-----" + connections[tenantID]);
+
+//   socket.on("add table", (data) => {
+//     if (connections[data.tenant_id]) {
+//       io.to(connections[String(tenant_id)].id).emit("add table", data);
+//     }
+//   });
+//   socket.on("delete table", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("delete table", data);
+//     }
+//   });
+//   socket.on("remove table", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("remove table", data);
+//     }
+//   });
+//   socket.on("duplicate table", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("duplicate table", data);
+//     }
+//   });
+//   socket.on("waiter call", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("waiter call", data);
+//     }
+//   });
+
+//   socket.on('update user', (data) => {
+//     const checkTenant = Tenant.findOne({ tenantID });
+//     const talentId = checkTenant.tenant_id;
+//   console.log("talentId", checkTenant.name)
+
+//     if (connections[String(checkTenant.tenant_id)]) {
+//       // console.log(connections[String(updatedOrder.client_id)].id + ' sent to ' + updatedOrder.client_id);
+// console.log("I AM CALLED!", io.to(connections[String(checkTenant.tenant_id)]).emit('update user', data))
+// console.log(connections[String(checkTenant.tenant_id)] + ' sent to ' + tenant_id);
+// console.log(data)
+// io.to(connections[String(checkTenant.tenant_id)]).emit('update user', data);
+//     }
+//   });
+
+//   socket.on("add promo", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("add promo", data);
+//     }
+//   });
+//   socket.on("update promo", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("update promo", data);
+//     }
+//   });
+//   socket.on("delete promo", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("delete promo", data);
+//     }
+//   });
+
+//   socket.on("add category", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("add category", data);
+//     }
+//   });
+//   socket.on("update category", (data) =>
+//     io.to(connections[String(tenant_id)].id).emit("update category", data)
+//   );
+//   socket.on("delete category", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("delete category", data);
+//     }
+//   });
+
+//   socket.on("add order", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("add order", data);
+//     }
+//   });
+//   socket.on("update order", (data) => {
+//     if (connections[String(tenant_id)]) {
+//       io.to(connections[String(tenant_id)].id).emit("update order", data);
+//     }
+//   });
+
+//   // socket.on('add table',data => socket.broadcast.emit('add table', data));
+//   // socket.on('delete table', data => socket.broadcast.emit('delete table', data));
+//   // socket.on('remove table', data => socket.broadcast.emit('remove table', data));
+//   // socket.on('duplicate table', data => socket.broadcast.emit('duplicate table', data));
+//   // socket.on('waiter call', data => socket.broadcast.emit('waiter call', data));
+
+//   // socket.on('update user', data => {socket.broadcast.emit('update user', data); console.log("Am i called?", socket.broadcast.emit('update user', data))});
+
+//   // socket.on('add promo', data => socket.broadcast.emit('add promo', data));
+//   // socket.on('update promo', data => socket.broadcast.emit('update promo', data));
+//   // socket.on('delete promo', data => socket.broadcast.emit('delete promo', data));
+
+//   // socket.on('add category', data => socket.broadcast.emit('add category', data));
+//   // socket.on('update category', data => socket.broadcast.emit('update category', data));
+//   // socket.on('delete category', data => socket.broadcast.emit('delete category', data));
+
+//   // socket.on('add order', data => socket.broadcast.emit('add order', data));
+//   // socket.on('update order', data => socket.broadcast.emit('update order', data));
+
+//   socket.on("disconnect", () => {
+//     online--;
+//     console.log(`Socket ${socket.id} disconnected.`);
+//     console.log(`Online: ${online}`);
+//     io.emit("visitor exits", online);
+//   });
+// });
+
+// Run when client connects
+
+io.on("connection", (socket) => {
   online++;
-  const tenant_id = socket.handshake.query.tenant_id
-  console.log( tenant_id + " client is connected with " + socket.id);
+  const tenantID = socket.handshake.query.tenant_id;
+  console.log(tenantID + " client is connected with " + socket.id);
   console.log(`Online: ${online}`);
-  io.emit('visitor enters', online);
+  io.emit("visitor enters", online);
 
-  
-  socket.on('add table', data => socket.broadcast.emit('add table', data));
-  socket.on('delete table', data => socket.broadcast.emit('delete table', data));
-  socket.on('remove table', data => socket.broadcast.emit('remove table', data));
-  socket.on('duplicate table', data => socket.broadcast.emit('duplicate table', data));
-  
-  socket.on('update user', data => socket.broadcast.emit('update user', data));
+  socket.on("joinRoom", (room) => {
+    const user = userJoin(socket.id, room);
 
-  socket.on('add promo', data => socket.broadcast.emit('add promo', data));
-  socket.on('update promo', data => socket.broadcast.emit('update promo', data));
-  socket.on('delete promo', data => socket.broadcast.emit('delete promo', data));
+    socket.join(user.room);
 
-  socket.on('add category', data => socket.broadcast.emit('add category', data));
-  socket.on('update category', data => socket.broadcast.emit('update category', data));
-  socket.on('delete category', data => socket.broadcast.emit('delete category', data));
+    // Send users and room info
+    io.to(user.room).emit("roomUsers", {
+      room: user.room,
+      users: getRoomUsers(user.room),
+    });
+  });
 
+  // Listen for events
+  socket.on("add table", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("add table", data);
+  });
+  socket.on("delete table", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("delete table", data);
+  });
+  socket.on("remove table", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("remove table", data);
+  });
+  socket.on("duplicate table", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("duplicate table", data);
+  });
+  socket.on("add waiter call", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("add waiter call", data);
+  });
+  socket.on("remove waiter call", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("remove waiter call", data);
+  });
+  socket.on("update user", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("update user", data);
+  });
 
-  socket.on('add order', data => socket.broadcast.emit('add order', data));
-  socket.on('update order', data => socket.broadcast.emit('update order', data));
+  socket.on("add promo", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("add promo", data);
+  });
+  socket.on("update promo", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("update promo", data);
+  });
+  socket.on("delete promo", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("delete promo", data);
+  });
 
-  socket.on('disconnect', () => {
+  socket.on("add category", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("add category", data);
+  });
+  socket.on("update category", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("update category", data);
+  });
+  socket.on("delete category", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("delete category", data);
+  });
+
+  socket.on("add order", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("add order", data);
+  });
+  socket.on("update order", (data) => {
+    const user = getCurrentUser(socket.id);
+    console.log("user room", user.room);
+    io.to(user.room).emit("update order", data);
+  });
+
+  // Runs when client disconnects
+  socket.on("disconnect", () => {
+    const user = userLeave(socket.id);
     online--;
     console.log(`Socket ${socket.id} disconnected.`);
     console.log(`Online: ${online}`);
-    io.emit('visitor exits', online);
+    io.emit("visitor exits", online);
+    if (user) {
+      // Send users and room info
+      io.to(user.room).emit("roomUsers", {
+        room: user.room,
+        users: getRoomUsers(user.room),
+      });
+    }
   });
 });
 
-
-httpServer.listen(port, () => {  
-  console.log('Server and socket is running on port:' , port );
+httpServer.listen(port, () => {
+  console.log("Server and socket is running on port:", port);
 });

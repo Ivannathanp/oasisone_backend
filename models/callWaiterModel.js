@@ -8,23 +8,23 @@ const callWaiterSchema = mongoose.Schema(
     },
     waiter: [
       {
-        name: {
+        user_name: {
           type: String,
           required: true,
         },
-        phoneNumber: {
+        user_phonenumber: {
           type: String,
           required: true,
         },
-        instruction: {
+        order_instruction: {
           type: String,
           required: false,
         },
-        table_id: {
-          type: String,
+        order_table: {
+          type: Number,
           required: true,
         },
-        numberOfGuess: {
+        user_guest: {
           type: Number,
           required: true,
         },

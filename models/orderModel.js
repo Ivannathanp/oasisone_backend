@@ -2,10 +2,10 @@ import mongoose from "mongoose";
 
 const orderSchema = mongoose.Schema(
   {
-    user_id: {
-      type: String,
-      required: true,
-    },
+    // user_id: {
+    //   type: String,
+    //   required: true,
+    // },
     order_id: {
       type: String,
       required: true,
@@ -15,7 +15,7 @@ const orderSchema = mongoose.Schema(
       required: true,
     },
     order_table: {
-      type: String,
+      type: Number,
       required: true,
     },
     order_time:{
@@ -32,15 +32,15 @@ const orderSchema = mongoose.Schema(
       required: true,
     },
     order_total:{
-      type: String,
+      type: Number,
       required: true,
     },
     order_servicecharge:{
-      type: String,
+      type: Number,
       required: true,
     },
     order_taxcharge:{
-      type: String,
+      type: Number,
       required: true,
     },
     user_name:{

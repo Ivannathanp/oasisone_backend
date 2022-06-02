@@ -7,7 +7,7 @@ import {
 
 
 // Order
-router.post("/create", CreateOrder );
+router.post("/create/:tenant_id", CreateOrder );
 
 // Retreive
 router.get("/retrieve/:tenant_id", TenantRetrieveOrder );

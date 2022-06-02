@@ -79,7 +79,7 @@ async function CreatePromotions(req, res) {
                 return res.status(200).json({
                     status  : "SUCCESS",
                     message : "Promotions has been created",
-                    data    : newPromobanner,
+                    data    : newPromobanner.promotions,
                 })
             } else {
                 return res.status(404).json({
