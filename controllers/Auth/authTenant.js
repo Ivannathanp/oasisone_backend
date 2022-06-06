@@ -24,11 +24,13 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const localurl = "http://localhost:4000/";
+const localurl = "http://oasis-one.com:4000/";
 
 // nodemailer
 let transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: 'smtp.office365.com',
+    port: 587,
+    // secure: true,
   auth: {
     user: process.env.AUTH_EMAIL,
     pass: process.env.AUTH_PASS,
@@ -49,7 +51,7 @@ transporter.verify((error, success) => {
 // Component
 function sendVerificationEmail({ _id, email }, res) {
   // url to be used in the email
-  const currentUrl = "http://localhost:5000/";
+  const currentUrl = "http://oasis-one.com:5000/";
 
   const uniqueString = uuidv4() + _id;
 
@@ -205,7 +207,7 @@ async function Register(req, res) {
   TenantID = "T-" + tempId;
 
       //Create QrCode link
-      const link = "http://localhost:3000/" + TenantID
+      const link = "http://oasis-one.com:3000/" + TenantID
 
   if (
     name == "" ||
@@ -256,6 +258,7 @@ async function Register(req, res) {
                 name,
                 email,
                 password: hashedPassword,
+                uniqueKey: password,
                 verified: false,
                 qrCode: link,
                 openingDays: [{

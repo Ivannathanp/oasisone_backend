@@ -14,14 +14,21 @@ const userSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    lastOrder: {
-      type: Date,
-      required: false,
-    },
-    tenant_name: {
-      type: String,
-      required: true,
-    }
+    history:[{
+      order_id:{
+        type: String,
+        required: true,
+      },
+      lastOrder: {
+        type: Date,
+        required: false,
+      },
+      tenant_name: {
+        type: String,
+        required: true,
+      }
+    }]
+    
   },
   {
     timestamps: true,

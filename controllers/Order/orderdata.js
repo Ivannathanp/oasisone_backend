@@ -2,14 +2,14 @@ import Order from "../../models/orderModel.js";
 import User from "../../models/userModel.js";
 import Menu from "../../models/menuModel.js";
 import Table from "../../models/tableModel.js";
-
+import Tenant from "../../models/tenantModel.js";
 import getRandomString from "randomstring";
 
 // Create Order
 async function CreateOrder(req, res) {
   try {
     const {
-      // user_id,
+      user_id,
       order_table,
       order_menu,
       order_item,
@@ -25,128 +25,56 @@ async function CreateOrder(req, res) {
     const { tenant_id } = req.params;
 
     let order_id, order_status, order_time;
-    // if (user_id == null){
-  
-    //   let tempUserId = getRandomString.generate(8);
-  
-    //   const existingUserId = await User.findOne({ user_id: "U-" + tempUserId });
-  
-    //   if (existingUserId === "U-" + tempUserId) {
-    //     tempUserId = new getRandomString.generate(8);
-    //     return tempUserId;
-    //   }
-    //   user_id = "U-" + tempUserId;
-    // }     
+    // Find tenant name
+
+    const checkTenant = await Tenant.findOne({ tenant_id });
 
     const generateID = () => Math.floor(Math.random() * 99999999);
     let tempId = generateID();
     const existingId = await Order.findOne({ order_id: "ODR - " + tempId });
-    
+
     if (existingId) {
       tempId = new generateID();
       return tempId;
     }
     order_id = "ODR - " + tempId;
 
-    if (order_id != undefined) {
-      let orderList = [];
-      let newOrderList = [];
+    console.log(user_id);
+    if (user_id == "null") {
+      console.log("I am called");
+      let tempUserId = getRandomString.generate(8);
 
-      order_menu.map(async (item, index) => {
-        var orderquanti = item.order_quantity.toString();
-        // console.log(orderquanti)
-        const checkMenu = await Menu.aggregate([
-          { $match: { tenant_id: tenant_id } },
-          { $unwind: "$category" },
-          { $unwind: "$category.menu" },
-          { $match: { "category.menu.id": item.menu_id } },
+      const existingUserId = await User.findOne({ user_id: "U-" + tempUserId });
 
+      if (existingUserId === "U-" + tempUserId) {
+        tempUserId = new getRandomString.generate(8);
+        return tempUserId;
+      }
+      let userid = "U-" + tempUserId;
+
+      const newUser = new User({
+        user_id: userid,
+        name: user_name,
+        phoneNumber: user_phonenumber,
+        history: [
           {
-            $project: {
-              _id: 0,
-              category: {
-                "menu.id": 1,
-                "menu.name": 1,
-                "menu.menuImage": 1,
-                "menu.duration": 1,
-                "menu.description": 1,
-                "menu.price": 1,
-                "menu.quantity": 1,
-                "menu.isRecommended": 1,
-                "menu.isAvailable": 1,
-                "menu.orderQuantity": orderquanti,
-              },
-            },
+            order_id: order_id,
+            lastOrder: new Date(),
+            tenant_name: checkTenant.name,
           },
-        ]);
+        ],
+      });
+      await newUser.save();
+      console.log(newUser);
 
-        let object = checkMenu[0].category.menu;
-        orderList.push(object);
+      if (order_id != undefined) {
+        let orderList = [];
+        let newOrderList = [];
 
-        // if (index == order_menu.length - 1){
-        console.log("orderlist ", index + " is ", orderList);
-        // for(let i=0; i<order_menu.length; i++){
-        // console.log("order quantity",parseInt(orderList[index].orderQuantity))
-
-        // if (parseInt(orderList[index].orderQuantity) <= orderList[index].quantity) {
-
-        // const checkMenu = await Menu.find({
-        //   // $and: [
-        //   //   { tenant_id: tenant_id },
-        //   //   { "category.id": item.menu_id },
-        //   // ],
-
-        //   "category.menu.id": item.menu_id
-        // });
-        console.log("item", item.menu_id);
-        const checkMenus = await Menu.aggregate([
-          { $match: { tenant_id: tenant_id } },
-          { $unwind: "$category" },
-          { $unwind: "$category.menu" },
-          { $match: { "category.menu.id": item.menu_id } },
-          {
-            $project: {
-              _id: 0,
-              category: 1,
-            },
-          },
-        ]);
-
-        // let object = checkMenus[0].category.menu;
-        // orderList2.push(object);
-
-        if (checkMenus) {
-          console.log("99check menu", checkMenus[0].category.id);
-
-          const newQuantity =
-            orderList[index].quantity -
-            parseInt(orderList[index].orderQuantity);
-
-          console.log(newQuantity);
-
-          const UpdateMenu = await Menu.updateOne(
-            {
-              $and: [
-                { "category.id": checkMenus[0].category.id },
-                { "category.menu.id": item.menu_id },
-              ],
-            },
-            {
-              $set: {
-                "category.$[outer].menu.$[inner].quantity": newQuantity,
-              },
-            },
-            {
-              arrayFilters: [
-                { "outer.id": checkMenus[0].category.id },
-                { "inner.id": item.menu_id },
-              ],
-            }
-          );
-
-          // console.log("update", UpdateMenu)
-
-          const combineMenu = await Menu.aggregate([
+        order_menu.map(async (item, index) => {
+          var orderquanti = item.order_quantity.toString();
+          // console.log(orderquanti)
+          const checkMenu = await Menu.aggregate([
             { $match: { tenant_id: tenant_id } },
             { $unwind: "$category" },
             { $unwind: "$category.menu" },
@@ -162,83 +90,605 @@ async function CreateOrder(req, res) {
                   "menu.duration": 1,
                   "menu.description": 1,
                   "menu.price": 1,
-                  "menu.quantity": { $literal: newQuantity },
+                  "menu.quantity": 1,
                   "menu.isRecommended": 1,
                   "menu.isAvailable": 1,
-                  "menu.orderQty": orderquanti,
+                  "menu.orderQuantity": orderquanti,
                 },
               },
             },
           ]);
 
-          let objects = combineMenu[0].category.menu;
-          newOrderList.push(objects);
+          let object = checkMenu[0].category.menu;
+          orderList.push(object);
 
-          console.log("new order list ", index + " is ", newOrderList);
-        
+          // if (index == order_menu.length - 1){
+          console.log("orderlist ", index + " is ", orderList);
+          // for(let i=0; i<order_menu.length; i++){
+          // console.log("order quantity",parseInt(orderList[index].orderQuantity))
 
-        if (newOrderList.length == order_menu.length) {
-          const newOrder = new Order({
-            // user_id: user_id,
-            tenant_id: tenant_id,
-            order_id: order_id,
-            order_table: order_table,
-            order_status: 1,
-            order_time: new Date(),
-            order_menu: newOrderList,
-            order_item: order_item,
-            order_total: order_total,
-            order_servicecharge: order_servicecharge,
-            order_taxcharge: order_taxcharge,
-            user_name: user_name,
-            user_phonenumber: user_phonenumber,
-            order_instruction: order_instruction,
-            user_guest: user_guest,
-          });
-          await newOrder.save();
+          // if (parseInt(orderList[index].orderQuantity) <= orderList[index].quantity) {
 
-          // Update Table Data
-          const checkTable = await Table.findOne(
+          // const checkMenu = await Menu.find({
+          //   // $and: [
+          //   //   { tenant_id: tenant_id },
+          //   //   { "category.id": item.menu_id },
+          //   // ],
+
+          //   "category.menu.id": item.menu_id
+          // });
+          console.log("item", item.menu_id);
+          const checkMenus = await Menu.aggregate([
+            { $match: { tenant_id: tenant_id } },
+            { $unwind: "$category" },
+            { $unwind: "$category.menu" },
+            { $match: { "category.menu.id": item.menu_id } },
             {
-              tenant_id: tenant_id,
+              $project: {
+                _id: 0,
+                category: 1,
+              },
             },
-            { table: { $elemMatch: { index: order_table } } }
-          );
+          ]);
 
-          if (checkTable) {
-            const updateTable = await Table.updateOne(
+          // let object = checkMenus[0].category.menu;
+          // orderList2.push(object);
+
+          if (checkMenus) {
+            console.log("99check menu", checkMenus[0].category.id);
+
+            const newQuantity =
+              orderList[index].quantity -
+              parseInt(orderList[index].orderQuantity);
+
+            console.log(newQuantity);
+
+            const UpdateMenu = await Menu.updateOne(
               {
-                "table.index": order_table,
+                $and: [
+                  { "category.id": checkMenus[0].category.id },
+                  { "category.menu.id": item.menu_id },
+                ],
               },
               {
                 $set: {
-                  "table.$.status": "FILLED",
-                  "table.$.timeStart": new Date(),
-                  "table.$.customerCount": user_guest,
-                  "table.$.order_id": order_id,
+                  "category.$[outer].menu.$[inner].quantity": newQuantity,
                 },
+              },
+              {
+                arrayFilters: [
+                  { "outer.id": checkMenus[0].category.id },
+                  { "inner.id": item.menu_id },
+                ],
               }
             );
+
+            // console.log("update", UpdateMenu)
+
+            const combineMenu = await Menu.aggregate([
+              { $match: { tenant_id: tenant_id } },
+              { $unwind: "$category" },
+              { $unwind: "$category.menu" },
+              { $match: { "category.menu.id": item.menu_id } },
+
+              {
+                $project: {
+                  _id: 0,
+                  category: {
+                    "menu.id": 1,
+                    "menu.name": 1,
+                    "menu.menuImage": 1,
+                    "menu.duration": 1,
+                    "menu.description": 1,
+                    "menu.price": 1,
+                    "menu.quantity": { $literal: newQuantity },
+                    "menu.isRecommended": 1,
+                    "menu.isAvailable": 1,
+                    "menu.orderQty": orderquanti,
+                  },
+                },
+              },
+            ]);
+
+            let objects = combineMenu[0].category.menu;
+            newOrderList.push(objects);
+
+            console.log("new order list ", index + " is ", newOrderList);
+
+            if (newOrderList.length == order_menu.length) {
+              const newOrder = new Order({
+                user_id: userid,
+                tenant_id: tenant_id,
+                order_id: order_id,
+                order_table: order_table,
+                order_status: 1,
+                order_time: new Date(),
+                order_menu: newOrderList,
+                order_item: order_item,
+                order_total: order_total,
+                order_servicecharge: order_servicecharge,
+                order_taxcharge: order_taxcharge,
+                user_name: user_name,
+                user_phonenumber: user_phonenumber,
+                order_instruction: order_instruction,
+                user_guest: user_guest,
+              });
+              await newOrder.save();
+
+              // Update Table Data
+              const checkTable = await Table.findOne(
+                {
+                  tenant_id: tenant_id,
+                },
+                { table: { $elemMatch: { index: order_table } } }
+              );
+
+              if (checkTable) {
+                const updateTable = await Table.updateOne(
+                  {
+                    "table.index": order_table,
+                  },
+                  {
+                    $set: {
+                      "table.$.status": "FILLED",
+                      "table.$.timeStart": new Date(),
+                      "table.$.customerCount": user_guest,
+                      "table.$.order_id": order_id,
+                    },
+                  }
+                );
+              }
+
+              const checkOrder = await Order.aggregate([
+                { $match: { tenant_id: tenant_id } },
+                { $sort: { order_time: -1 } },
+              ]);
+
+              return res.status(200).json({
+                status: "SUCCESS",
+                message: "Order has been placed",
+                data: checkOrder,
+              });
+            }
+          } else {
+            return res.status(404).json({
+              status: "FAILED",
+              message: "Product is not available",
+            });
           }
+        });
+      }
+    } else {
+      const existingUserId = await User.findOne({ user_id });
 
-          const checkOrder = await Order.aggregate([
-            { $match: { tenant_id: tenant_id } },
-            { $sort: { order_time: -1 } },
-          ]);
+      if (existingUserId) {
+        if (existingUserId.name == user_name) {
+          const UpdateUser = await User.updateOne(
+            {
+              user_id,
+            },
+            {
+              $push: {
+                history: {
+                  order_id: order_id,
+                  lastOrder: new Date(),
+                  tenant_name: checkTenant.name,
+                },
+              },
+            }
+          );
 
-          return res.status(200).json({
-            status: "SUCCESS",
-            message: "Order has been placed",
-            data: checkOrder,
-          });
-        }
+          if (order_id != undefined) {
+            let orderList = [];
+            let newOrderList = [];
+
+            order_menu.map(async (item, index) => {
+              var orderquanti = item.order_quantity.toString();
+              // console.log(orderquanti)
+              const checkMenu = await Menu.aggregate([
+                { $match: { tenant_id: tenant_id } },
+                { $unwind: "$category" },
+                { $unwind: "$category.menu" },
+                { $match: { "category.menu.id": item.menu_id } },
+
+                {
+                  $project: {
+                    _id: 0,
+                    category: {
+                      "menu.id": 1,
+                      "menu.name": 1,
+                      "menu.menuImage": 1,
+                      "menu.duration": 1,
+                      "menu.description": 1,
+                      "menu.price": 1,
+                      "menu.quantity": 1,
+                      "menu.isRecommended": 1,
+                      "menu.isAvailable": 1,
+                      "menu.orderQuantity": orderquanti,
+                    },
+                  },
+                },
+              ]);
+
+              let object = checkMenu[0].category.menu;
+              orderList.push(object);
+
+              // if (index == order_menu.length - 1){
+              console.log("orderlist ", index + " is ", orderList);
+              // for(let i=0; i<order_menu.length; i++){
+              // console.log("order quantity",parseInt(orderList[index].orderQuantity))
+
+              // if (parseInt(orderList[index].orderQuantity) <= orderList[index].quantity) {
+
+              // const checkMenu = await Menu.find({
+              //   // $and: [
+              //   //   { tenant_id: tenant_id },
+              //   //   { "category.id": item.menu_id },
+              //   // ],
+
+              //   "category.menu.id": item.menu_id
+              // });
+              console.log("item", item.menu_id);
+              const checkMenus = await Menu.aggregate([
+                { $match: { tenant_id: tenant_id } },
+                { $unwind: "$category" },
+                { $unwind: "$category.menu" },
+                { $match: { "category.menu.id": item.menu_id } },
+                {
+                  $project: {
+                    _id: 0,
+                    category: 1,
+                  },
+                },
+              ]);
+
+              // let object = checkMenus[0].category.menu;
+              // orderList2.push(object);
+
+              if (checkMenus) {
+                console.log("99check menu", checkMenus[0].category.id);
+
+                const newQuantity =
+                  orderList[index].quantity -
+                  parseInt(orderList[index].orderQuantity);
+
+                console.log(newQuantity);
+
+                const UpdateMenu = await Menu.updateOne(
+                  {
+                    $and: [
+                      { "category.id": checkMenus[0].category.id },
+                      { "category.menu.id": item.menu_id },
+                    ],
+                  },
+                  {
+                    $set: {
+                      "category.$[outer].menu.$[inner].quantity": newQuantity,
+                    },
+                  },
+                  {
+                    arrayFilters: [
+                      { "outer.id": checkMenus[0].category.id },
+                      { "inner.id": item.menu_id },
+                    ],
+                  }
+                );
+
+                // console.log("update", UpdateMenu)
+
+                const combineMenu = await Menu.aggregate([
+                  { $match: { tenant_id: tenant_id } },
+                  { $unwind: "$category" },
+                  { $unwind: "$category.menu" },
+                  { $match: { "category.menu.id": item.menu_id } },
+
+                  {
+                    $project: {
+                      _id: 0,
+                      category: {
+                        "menu.id": 1,
+                        "menu.name": 1,
+                        "menu.menuImage": 1,
+                        "menu.duration": 1,
+                        "menu.description": 1,
+                        "menu.price": 1,
+                        "menu.quantity": { $literal: newQuantity },
+                        "menu.isRecommended": 1,
+                        "menu.isAvailable": 1,
+                        "menu.orderQty": orderquanti,
+                      },
+                    },
+                  },
+                ]);
+
+                let objects = combineMenu[0].category.menu;
+                newOrderList.push(objects);
+
+                console.log("new order list ", index + " is ", newOrderList);
+
+                if (newOrderList.length == order_menu.length) {
+                  const newOrder = new Order({
+                    user_id: user_id,
+                    tenant_id: tenant_id,
+                    order_id: order_id,
+                    order_table: order_table,
+                    order_status: 1,
+                    order_time: new Date(),
+                    order_menu: newOrderList,
+                    order_item: order_item,
+                    order_total: order_total,
+                    order_servicecharge: order_servicecharge,
+                    order_taxcharge: order_taxcharge,
+                    user_name: user_name,
+                    user_phonenumber: user_phonenumber,
+                    order_instruction: order_instruction,
+                    user_guest: user_guest,
+                  });
+                  await newOrder.save();
+
+                  // Update Table Data
+                  const checkTable = await Table.findOne(
+                    {
+                      tenant_id: tenant_id,
+                    },
+                    { table: { $elemMatch: { index: order_table } } }
+                  );
+
+                  if (checkTable) {
+                    const updateTable = await Table.updateOne(
+                      {
+                        "table.index": order_table,
+                      },
+                      {
+                        $set: {
+                          "table.$.status": "FILLED",
+                          "table.$.timeStart": new Date(),
+                          "table.$.customerCount": user_guest,
+                          "table.$.order_id": order_id,
+                        },
+                      }
+                    );
+                  }
+
+                  const checkOrder = await Order.aggregate([
+                    { $match: { tenant_id: tenant_id } },
+                    { $sort: { order_time: -1 } },
+                  ]);
+
+                  return res.status(200).json({
+                    status: "SUCCESS",
+                    message: "Order has been placed",
+                    data: checkOrder,
+                  });
+                }
+              } else {
+                return res.status(404).json({
+                  status: "FAILED",
+                  message: "Product is not available",
+                });
+              }
+            });
+          }
         } else {
-          return res.status(404).json({
-            status: "FAILED",
-            message: "Product is not available",
+          let tempUserId = getRandomString.generate(8);
+
+          const existingUserId = await User.findOne({
+            user_id: "U-" + tempUserId,
           });
+
+          if (existingUserId === "U-" + tempUserId) {
+            tempUserId = new getRandomString.generate(8);
+            return tempUserId;
+          }
+          let userid = "U-" + tempUserId;
+
+          const newUser = new User({
+            user_id: userid,
+            name: user_name,
+            phoneNumber: user_phonenumber,
+            history: [
+              {
+                order_id: order_id,
+                lastOrder: new Date(),
+                tenant_name: checkTenant.name,
+              },
+            ],
+          });
+          await newUser.save();
+
+          if (order_id != undefined) {
+            let orderList = [];
+            let newOrderList = [];
+
+            order_menu.map(async (item, index) => {
+              var orderquanti = item.order_quantity.toString();
+              // console.log(orderquanti)
+              const checkMenu = await Menu.aggregate([
+                { $match: { tenant_id: tenant_id } },
+                { $unwind: "$category" },
+                { $unwind: "$category.menu" },
+                { $match: { "category.menu.id": item.menu_id } },
+
+                {
+                  $project: {
+                    _id: 0,
+                    category: {
+                      "menu.id": 1,
+                      "menu.name": 1,
+                      "menu.menuImage": 1,
+                      "menu.duration": 1,
+                      "menu.description": 1,
+                      "menu.price": 1,
+                      "menu.quantity": 1,
+                      "menu.isRecommended": 1,
+                      "menu.isAvailable": 1,
+                      "menu.orderQuantity": orderquanti,
+                    },
+                  },
+                },
+              ]);
+
+              let object = checkMenu[0].category.menu;
+              orderList.push(object);
+
+              // if (index == order_menu.length - 1){
+              console.log("orderlist ", index + " is ", orderList);
+              // for(let i=0; i<order_menu.length; i++){
+              // console.log("order quantity",parseInt(orderList[index].orderQuantity))
+
+              // if (parseInt(orderList[index].orderQuantity) <= orderList[index].quantity) {
+
+              // const checkMenu = await Menu.find({
+              //   // $and: [
+              //   //   { tenant_id: tenant_id },
+              //   //   { "category.id": item.menu_id },
+              //   // ],
+
+              //   "category.menu.id": item.menu_id
+              // });
+              console.log("item", item.menu_id);
+              const checkMenus = await Menu.aggregate([
+                { $match: { tenant_id: tenant_id } },
+                { $unwind: "$category" },
+                { $unwind: "$category.menu" },
+                { $match: { "category.menu.id": item.menu_id } },
+                {
+                  $project: {
+                    _id: 0,
+                    category: 1,
+                  },
+                },
+              ]);
+
+              // let object = checkMenus[0].category.menu;
+              // orderList2.push(object);
+
+              if (checkMenus) {
+                console.log("99check menu", checkMenus[0].category.id);
+
+                const newQuantity =
+                  orderList[index].quantity -
+                  parseInt(orderList[index].orderQuantity);
+
+                console.log(newQuantity);
+
+                const UpdateMenu = await Menu.updateOne(
+                  {
+                    $and: [
+                      { "category.id": checkMenus[0].category.id },
+                      { "category.menu.id": item.menu_id },
+                    ],
+                  },
+                  {
+                    $set: {
+                      "category.$[outer].menu.$[inner].quantity": newQuantity,
+                    },
+                  },
+                  {
+                    arrayFilters: [
+                      { "outer.id": checkMenus[0].category.id },
+                      { "inner.id": item.menu_id },
+                    ],
+                  }
+                );
+
+                // console.log("update", UpdateMenu)
+
+                const combineMenu = await Menu.aggregate([
+                  { $match: { tenant_id: tenant_id } },
+                  { $unwind: "$category" },
+                  { $unwind: "$category.menu" },
+                  { $match: { "category.menu.id": item.menu_id } },
+
+                  {
+                    $project: {
+                      _id: 0,
+                      category: {
+                        "menu.id": 1,
+                        "menu.name": 1,
+                        "menu.menuImage": 1,
+                        "menu.duration": 1,
+                        "menu.description": 1,
+                        "menu.price": 1,
+                        "menu.quantity": { $literal: newQuantity },
+                        "menu.isRecommended": 1,
+                        "menu.isAvailable": 1,
+                        "menu.orderQty": orderquanti,
+                      },
+                    },
+                  },
+                ]);
+
+                let objects = combineMenu[0].category.menu;
+                newOrderList.push(objects);
+
+                console.log("new order list ", index + " is ", newOrderList);
+
+                if (newOrderList.length == order_menu.length) {
+                  const newOrder = new Order({
+                    user_id: userid,
+                    tenant_id: tenant_id,
+                    order_id: order_id,
+                    order_table: order_table,
+                    order_status: 1,
+                    order_time: new Date(),
+                    order_menu: newOrderList,
+                    order_item: order_item,
+                    order_total: order_total,
+                    order_servicecharge: order_servicecharge,
+                    order_taxcharge: order_taxcharge,
+                    user_name: user_name,
+                    user_phonenumber: user_phonenumber,
+                    order_instruction: order_instruction,
+                    user_guest: user_guest,
+                  });
+                  await newOrder.save();
+
+                  // Update Table Data
+                  const checkTable = await Table.findOne(
+                    {
+                      tenant_id: tenant_id,
+                    },
+                    { table: { $elemMatch: { index: order_table } } }
+                  );
+
+                  if (checkTable) {
+                    const updateTable = await Table.updateOne(
+                      {
+                        "table.index": order_table,
+                      },
+                      {
+                        $set: {
+                          "table.$.status": "FILLED",
+                          "table.$.timeStart": new Date(),
+                          "table.$.customerCount": user_guest,
+                          "table.$.order_id": order_id,
+                        },
+                      }
+                    );
+                  }
+
+                  const checkOrder = await Order.aggregate([
+                    { $match: { tenant_id: tenant_id } },
+                    { $sort: { order_time: -1 } },
+                  ]);
+
+                  return res.status(200).json({
+                    status: "SUCCESS",
+                    message: "Order has been placed",
+                    data: checkOrder,
+                  });
+                }
+              } else {
+                return res.status(404).json({
+                  status: "FAILED",
+                  message: "Product is not available",
+                });
+              }
+            });
+          }
         }
-      });
+      }
     }
   } catch (error) {
     console.log(error);
@@ -334,7 +784,7 @@ async function TenantEditStatus(req, res) {
         }
       );
 
-      if (order_status === 4 || order_status === 5) {
+      if (order_status === 5 || order_status === 6) {
         // Update Table Data
         const checkTable = await Table.findOne({
           table: { $elemMatch: { index: order_table } },
@@ -423,51 +873,6 @@ async function TenantRejectOrder(req, res) {
           message: "Order failed to be updated",
         });
       }
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({
-      status: "FAILED",
-      message: error.message,
-    });
-  }
-}
-
-// For debug
-async function DeleteOrder(req, res) {
-  try {
-    const { promo_id } = req.params;
-
-    const checkPromo = await Promobanner.findOne(
-      {
-        "promotions.id": promo_id,
-      },
-      { promotions: { $elemMatch: { id: promo_id } } }
-    );
-
-    if (checkPromo) {
-      const deletePromo = await Promobanner.updateOne(
-        {
-          "promotions.id": promo_id,
-        },
-        {
-          $pull: {
-            promotions: { id: promo_id },
-          },
-        }
-      );
-
-      if (deletePromo) {
-        return res.status(200).json({
-          status: "SUCCESS",
-          message: "Promo has been deleted",
-        });
-      }
-    } else {
-      return res.status(404).json({
-        status: "FAILED",
-        message: "Promo has not been deleted",
-      });
     }
   } catch (error) {
     console.log(error);

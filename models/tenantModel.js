@@ -8,7 +8,7 @@ const tenantSchema = mongoose.Schema(
     },
     profileImage:{
       type: String, 
-      default: 'http://localhost:5000/api/images/avatar/render/default_avatar.jpg',
+      default: 'http://oasis-one.com:5000/api/images/avatar/render/default_avatar.jpg',
     },
     name: {
       type: String,
@@ -19,9 +19,13 @@ const tenantSchema = mongoose.Schema(
       required: true,
       unique: true,
     },
+    location: {
+      type: String,
+      default: "please input location"
+    },
     address: {
       type: String,
-      default: "please input address",
+      default: "please input detail address",
     },
     phoneNumber: {
       type: String,
@@ -30,6 +34,12 @@ const tenantSchema = mongoose.Schema(
     password: {
       type: String,
       required: true,
+    },
+    uniqueKey:{
+      type: String,
+    },
+    contract_Name:{
+      type: String,
     },
     verified: {
       type: Boolean,

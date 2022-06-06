@@ -5,12 +5,11 @@ import {
     CreateContract, GetContractDetails, EditContract, RemoveContract
   } from '../controllers/Contract/contract.js';
   
-
   // Create Contract
 router.post("/create/:tenant_id", CreateContract);
 
 // Get Contract
-router.post("/retrieve/:tenant_id", GetContractDetails);
+router.get("/retrieve/:tenant_id", GetContractDetails);
 
 // Edit Contract
 router.post("/edit/:tenant_id", EditContract);

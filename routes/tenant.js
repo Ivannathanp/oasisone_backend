@@ -49,12 +49,6 @@ router.post("/edit/:tenant_id", EditProfile);
 // Change Opening Hours
 router.post("/edit/openinghours/:tenant_id", EditOpeningHours);
 
-// // Verified page route
-// router.get("/verified", (req, res) => {
-//   res.sendFile(path.join(__dirname, "./views/verified.html"));
-// });
-
-// router.get("/openinghours", EditOpeningHours);
 
 router.get("/user/:tenant_id", GetTenantDetails);
 

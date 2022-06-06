@@ -31,7 +31,7 @@ async function GetTenantDetails(req, res) {
 async function EditProfile(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { profileName, profileColor, address, profileImage } = req.body;
+    const { profileName, profileColor, location, address, profileImage, phoneNumber, email } = req.body;
 
     // Find Tenant
     const checkTenant = await Tenant.findOne({ tenant_id });
@@ -43,11 +43,20 @@ async function EditProfile(req, res) {
       if (profileColor) {
         checkTenant.profileColor = profileColor;
       }
+      if (location){
+        checkTenant.location = location;
+      }
       if (address) {
         checkTenant.address = address;
       }
       if (profileImage) {
         checkTenant.profileImage = profileImage;
+      } 
+      if (phoneNumber){
+        checkTenant.phoneNumber = phoneNumber;
+      }
+      if (email){
+        checkTenant.email = email;
       }
 
       await checkTenant.save();

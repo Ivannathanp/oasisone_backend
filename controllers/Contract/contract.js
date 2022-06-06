@@ -1,24 +1,52 @@
 import Contract from "../../models/contractModel.js";
+import Tenant from "../../models/tenantModel.js";
 
 async function CreateContract(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { start_Date, contract_Period } = req.body;
+    const { start_Date, contract_Period, contract_Name, contract_File } =
+      req.body;
 
     // Find Tenant
-    const checkTenant = await Contract.findOne({ tenant_id });
+    const checkContract = await Contract.findOne({ tenant_id });
 
-    if (!checkTenant) {
+    if (!checkContract) {
       const newContract = new Contract({
         tenant_id: tenant_id,
         start_Date: start_Date,
-        contract_period: contract_Period,
+        contract_Period: contract_Period,
+        contract_File: contract_File,
       });
       await newContract.save();
+
+      // Update contract in Tenant
+      const checkTenant = await Tenant.findOne({ tenant_id });
+      if (checkTenant) {
+        checkTenant.contract_Name = contract_Name;
+      }
+      await checkTenant.save();
 
       return res.status(200).json({
         status: "SUCCESS",
         message: "Contract has been created",
+        data: checkContract,
+      });
+    } else if (checkContract) {
+      (checkContract.start_Date = start_Date),
+        (checkContract.contract_Period = contract_Period),
+        (checkContract.contract_File = contract_File),
+        await checkContract.save();
+
+      // Update contract in Tenant
+      const checkTenant = await Tenant.findOne({ tenant_id });
+      if (checkTenant) {
+        checkTenant.contract_Name = contract_Name;
+      }
+      await checkTenant.save();
+
+      return res.status(200).json({
+        status: "SUCCESS",
+        message: "Profile has been edited",
         data: checkTenant,
       });
     } else {
@@ -41,13 +69,13 @@ async function GetContractDetails(req, res) {
     const { tenant_id } = req.params;
 
     // Find Contract
-    const checkTenant = await Contract.findOne({ tenant_id });
+    const checkContract = await Contract.findOne({ tenant_id });
 
-    if (checkTenant) {
+    if (checkContract) {
       return res.status(200).json({
         status: "SUCCESS",
         message: "Contract has been found",
-        data: checkTenant,
+        data: checkContract,
       });
     } else {
       return res.status(404).json({
@@ -67,12 +95,13 @@ async function GetContractDetails(req, res) {
 async function EditContract(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { start_Date, contract_Period } = req.body;
+    const { start_Date, contract_Period, contract_Name, contract_File } =
+      req.body;
 
     // Find Tenant
-    const checkTenant = await Contract.findOne({ tenant_id });
+    const checkContract = await Contract.findOne({ tenant_id });
 
-    if (checkTenant) {
+    if (checkContract) {
       const updateContract = await Contract.updateOne(
         {
           tenant_id: tenant_id,
@@ -80,10 +109,18 @@ async function EditContract(req, res) {
         {
           $set: {
             start_Date: start_Date,
-            contract_period: contract_Period,
+            contract_Period: contract_Period,
+            contract_File: contract_File,
           },
         }
       );
+
+      // Update contract in Tenant
+      const checkTenant = await Tenant.findOne({ tenant_id });
+      if (checkTenant) {
+        checkTenant.contract_Name = contract_Name;
+      }
+      await checkTenant.save();
 
       if (updateContract) {
         const checkAfterUpdate = await Contract.findOne({
@@ -119,12 +156,11 @@ async function EditContract(req, res) {
 async function RemoveContract(req, res) {
   try {
     const { tenant_id } = req.params;
-    const { start_Date, contract_Period } = req.body;
 
     // Find Tenant
-    const checkTenant = await Contract.findOne({ tenant_id });
+    const checkContract = await Contract.findOne({ tenant_id });
 
-    if (checkTenant) {
+    if (checkContract) {
       const deleteContract = await Contract.updateOne(
         {
           tenant_id: tenant_id,
@@ -135,6 +171,13 @@ async function RemoveContract(req, res) {
           },
         }
       );
+
+      // Update contract in Tenant
+      const checkTenant = await Tenant.findOne({ tenant_id });
+      if (checkTenant) {
+        checkTenant.contract_Name = "please add contract";
+      }
+      await checkTenant.save();
 
       if (deleteContract) {
         return res.status(200).json({

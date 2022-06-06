@@ -2,13 +2,13 @@ import express from "express";
 const router = express.Router();
 
 import { 
-    Register
-} from '../controllers/Auth/authUser.js';
+    RetrieveUser,CreateUser
+} from '../controllers/User/user.js';
 
-// Signup
-router.post("/signup", Register);
+// Retrieve
+router.get("/retrieve", RetrieveUser);
 
-// Get tenant data
-// router.get("/tenant/:tenant_id", getTenantData)
+// Create
+router.post("/create", CreateUser);
 
 export default router;

@@ -6,15 +6,15 @@ const contractSchema = mongoose.Schema(
       type: String,
       required: true,
     },
-    start_date: {
+    start_Date: {
         type: Date,
         required: true,
     },
-    contract_period: {
-      type: String,
+    contract_Period: {
+      type: Number,
       required: true,
     },
-    contract_file: {
+    contract_File: {
       type: String,
       required: true,
     },
