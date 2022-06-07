@@ -24,7 +24,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const localurl = "http://oasis-one.com:4000/";
+const localurl = "https://admin.oasis-one.com/";
 
 // nodemailer
 let transporter = nodemailer.createTransport({
@@ -51,7 +51,7 @@ transporter.verify((error, success) => {
 // Component
 function sendVerificationEmail({ _id, email }, res) {
   // url to be used in the email
-  const currentUrl = "http://oasis-one.com:5000/";
+  const currentUrl = "https://backend.oasis-one.com/";
 
   const uniqueString = uuidv4() + _id;
 
@@ -207,7 +207,7 @@ async function Register(req, res) {
   TenantID = "T-" + tempId;
 
       //Create QrCode link
-      const link = "http://oasis-one.com:3000/" + TenantID
+      const link = "https://user.oasis-one.com/" + TenantID
 
   if (
     name == "" ||

@@ -19,7 +19,7 @@ async function uploadavatar(req, res) {
         .json({ status: "ERROR", message: "No files found" });
 
     const linkRoot =
-      "http://oasis-one.com:5000/api/images/avatar/render/" + tenantId + '.jpg';
+      "https://backend.oasis-one.com/api/images/avatar/render/" + tenantId + '.jpg';
 
     // Find Tenant
     const checkTenant = await Tenant.findOne({ tenantId });

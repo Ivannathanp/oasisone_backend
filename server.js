@@ -69,7 +69,7 @@ app.use("/api/images", images);
 app.use("/api/contract", contract);
 
 // Set static folder
-// app.use(express.static(path.join(__dirname, 'public')));
+app.use(express.static(path.join(__dirname, 'public')));
 
 let online = 0;
 

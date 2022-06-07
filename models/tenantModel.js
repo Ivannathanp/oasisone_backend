@@ -8,7 +8,7 @@ const tenantSchema = mongoose.Schema(
     },
     profileImage:{
       type: String, 
-      default: 'http://oasis-one.com:5000/api/images/avatar/render/default_avatar.jpg',
+      default: 'https://backend.oasis-one.com/api/images/avatar/render/default_avatar.jpg',
     },
     name: {
       type: String,
