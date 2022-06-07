@@ -10,6 +10,10 @@ import {
   userLeave,
   getRoomUsers,
 } from "./utils/users.js";
+import path from "path";
+import { fileURLToPath } from "url";
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Models
 import Tenant from "./models/tenantModel.js";
@@ -70,6 +74,9 @@ app.use("/api/contract", contract);
 
 // Set static folder
 app.use(express.static(path.join(__dirname, 'public')));
+app.get('/*', function (req, res) {
+  res.sendFile(path.join(__dirname, 'build', 'index.html'));
+});
 
 let online = 0;
 
