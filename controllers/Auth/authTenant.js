@@ -194,7 +194,7 @@ function sendResetEmail({ _id, email }, redirectUrl, res) {
 // Signup Functions
 async function Register(req, res) {
 	try {
-		const { name, email, password, confirmPassword } = req.body;
+		const { name, email, password } = req.body;
   	let TenantID;
   	let tempId = getRandomString.generate(8);
 
@@ -212,8 +212,7 @@ async function Register(req, res) {
   if (
     name == "" ||
     email == "" ||
-    password == "" ||
-    confirmPassword == ""
+    password == "" 
   ) {
     res.json({
       status: "FAILED",
@@ -229,11 +228,6 @@ async function Register(req, res) {
     res.json({
       status: "FAILED",
       message: " Password is too short",
-    });
-  } else if (confirmPassword != password) {
-    res.json({
-      status: "FAILED",
-      message: "Confirm Password is not the same as password",
     });
   } else {
     //checking if user already exists
