@@ -21,7 +21,7 @@ router.get("/tenant/name/:sortingMethod", TenantAlphabetSort );
 router.get("/tenant/location/:sortingMethod", TenantLocationSort );
 
   // Filter Tenant by Status (open -> close)
-router.get("/tenant/status/:sortingMethod", TenantStatusSort );
+router.get("/tenant/status", TenantStatusSort );
 
   // Tenant Edit Profile (Take from tenant)
 
